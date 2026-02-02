@@ -1,6 +1,6 @@
 import { Document, Schema } from "mongoose";
 
-import type { PaymentStatus } from "../constants/payment.constants.ts";
+import type { PaymentStatus } from "./payment.constants.ts";
 
 export interface IPayment extends Document {
   orderId: Schema.Types.ObjectId;

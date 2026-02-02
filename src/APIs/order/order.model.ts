@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
 // import types
-import type { OrderItem, IOrder } from "../interfaces/IOrder.ts";
+import type { OrderItem, IOrder } from "./order.interface.ts";
 
 // import consts
-import { ORDER_STATUSES } from "../constants/order.constants.ts";
+import { ORDER_STATUSES } from "./order.constants.ts";
 
 const orderItemSchema = new mongoose.Schema<OrderItem>(
   {

@@ -1,15 +1,13 @@
 // import libraries
-import * as z from "zod";
-
 // import models
-import Category from "../models/Category.ts";
+import Category from "./category.model.ts";
 
 //import services
-import categoryService from "../services/category.service.ts";
+import categoryService from "./category.service.ts";
 
 // import types
 import type { Request, Response, NextFunction } from "express";
-import type { ICategory } from "../interfaces/ICategory.ts";
+import type { ICategory } from "./category.interface.ts";
 
 class CategoryController {
   constructor() {}

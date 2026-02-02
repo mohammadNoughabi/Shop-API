@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import type { IUser } from "../interfaces/IUser.ts";
+import type { IUser } from "./user.interface.ts";
 
 const userSchema = new mongoose.Schema<IUser>(
   {

@@ -1,8 +1,8 @@
 import { Document, Schema } from "mongoose";
 
 // import types
-import type { OrderStatus } from "../constants/order.constants.ts";
-import type { IPayment } from "./IPayment.ts";
+import type { OrderStatus } from "./order.constants.ts";
+import type { IPayment } from "../payment/payment.interface.ts";
 
 export type OrderItem = {
   product: Schema.Types.ObjectId;

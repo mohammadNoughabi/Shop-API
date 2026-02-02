@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 import type { Schema } from "mongoose";
 
-import type { ICategory } from "../interfaces/ICategory.ts";
+import type { ICategory } from "./category.interface.ts";
 
 const categorySchema: Schema = new mongoose.Schema<ICategory>(
   {

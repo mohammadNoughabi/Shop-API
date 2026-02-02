@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 
-import type { IPayment } from '../interfaces/IPayment.ts'
-import { PAYMENT_STATUSES } from '../constants/payment.constants.ts'    
+import type { IPayment } from './payment.interface.ts'
+import { PAYMENT_STATUSES } from './payment.constants.ts'    
 
 const paymentSchema = new mongoose.Schema<IPayment>(
     {

@@ -6,7 +6,7 @@ import type { Application } from "express";
 
 // import other modules
 import connectDb from "./config/dbConnection.ts";
-import router from "./routes/main.routes.ts";
+import router from "./router.ts";
 
 // initializing express app
 const app: Application = express();
