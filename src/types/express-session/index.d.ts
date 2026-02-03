@@ -1,7 +1,7 @@
 import "express-session";
 
 declare module "express-session" {
-  interface SessionData {
+  export interface SessionData {
     otp?: string;
     email?: string;
   }
