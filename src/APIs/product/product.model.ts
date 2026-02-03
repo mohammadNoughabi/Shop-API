@@ -7,6 +7,7 @@ const productSchema = new mongoose.Schema<IProduct>(
     title: {
       type: String,
       required: [true, "Title is required"],
+      unique: [true, "Product with this name already exists"],
     },
     description: {
       type: String,
@@ -32,6 +33,14 @@ const productSchema = new mongoose.Schema<IProduct>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
       required: [true, "Category is required"],
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
     },
   },
   {

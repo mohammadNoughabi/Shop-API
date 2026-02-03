@@ -1,0 +1,105 @@
+import jwtService from "./jwt.service.ts";
+import authService from "./auth.service.ts";
+
+import type { Request, Response } from "express";
+
+class AuthController {
+  constructor() {}
+
+  async register(req: Request, res: Response): Promise<Response | void> {
+    try {
+      const { username, email, password } = req.body;
+      if (!username || !email || !password) {
+        return res.status(400).json({
+          success: false,
+          message: "Username, email, and password are required",
+        });
+      }
+
+      const createdUser = authService.register(username, email, password);
+
+      res
+        .status(201)
+        .json({
+          success: true,
+          message: "User registered successfully",
+          user: createdUser,
+        });
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+
+  async login(req: Request, res: Response): Promise<Response | void> {
+    try {
+      const { email, password } = req.body;
+      if (!email || !password) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Email and password are required" });
+      }
+     
+      const user = await authService.login(email, password);
+
+      // Generate JWT tokens
+      const accessToken = jwtService.generateAccessToken({
+        id: String(user._id),
+        email: user.email,
+        role: user.role,
+      });
+      const refreshToken = jwtService.generateRefreshToken({
+        id: String(user._id),
+        email: user.email,
+        role: user.role,
+      });
+
+      // Send tokens in response
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 15 * 60 * 1000, // 15 minutes
+      });
+
+      res.status(200).json({ success: true, message: "Login successful" });
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+
+  async logout(req: Request, res: Response) : Promise<Response | void> {
+    try {
+      res.clearCookie("accessToken");
+      res.clearCookie("refreshToken");
+      res
+        .status(200)
+        .json({ success: true, message: "Logged out successfully" });
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+
+  async forgotPassword(req: Request, res: Response) {
+    // Forgot password logic here
+  }
+
+  async resetPassword(req: Request, res: Response) {
+    // Reset password logic here
+  }
+
+}
+
+export default new AuthController();

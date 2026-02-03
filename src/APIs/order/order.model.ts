@@ -61,11 +61,6 @@ const orderSchema = new mongoose.Schema<IOrder>(
       min: 4,
       max: 10,
     },
-    payment: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Payment",
-      required: true,
-    },
     status: {
       type: String,
       enum: ORDER_STATUSES,
@@ -79,6 +74,10 @@ const orderSchema = new mongoose.Schema<IOrder>(
     isDeleted: {
       type: Boolean,
       default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
     },
   },
   {

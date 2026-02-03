@@ -22,6 +22,10 @@ const categorySchema: Schema = new mongoose.Schema<ICategory>(
       type: Boolean,
       default: false,
     },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

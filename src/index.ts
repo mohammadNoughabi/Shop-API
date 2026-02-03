@@ -1,5 +1,6 @@
-// import packeges 
+// import packeges
 import express from "express";
+import cookieParser from "cookie-parser";
 
 // import types
 import type { Application } from "express";
@@ -13,8 +14,11 @@ const app: Application = express();
 
 // middlewares
 app.use(express.json());
-app.use(express.urlencoded({extended:true}));
-app.use("/api" , router)
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// routes
+app.use("/api", router);
 
 // main function to scheduling db connection before running app
 const main = async () => {

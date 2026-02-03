@@ -17,10 +17,33 @@ export interface IOrder extends Document {
   postalCode: string;
   phone: string;
   trackingNumber: number;
-  payment: IPayment;
   status: OrderStatus;
   user: Schema.Types.ObjectId;
   isDeleted: boolean;
+  deletedAt: Date;
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type OrderCreationData = Pick<
+  IOrder,
+  | "items"
+  | "total"
+  | "address"
+  | "postalCode"
+  | "phone"
+  | "trackingNumber"
+  | "user"
+>;
+
+export type OrderUpdateData = Partial<
+  Pick<
+    IOrder,
+    | "items"
+    | "total"
+    | "address"
+    | "postalCode"
+    | "phone"
+    | "trackingNumber"
+  >
+>;

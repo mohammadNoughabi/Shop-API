@@ -2,9 +2,10 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "module": "esnext",
+    "moduleResolution": "node",
     "target": "esnext",
+    "ignoreDeprecations": "6.0",
     "strict": true,
     "verbatimModuleSyntax": true,
     "allowImportingTsExtensions": true,
