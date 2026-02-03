@@ -14,6 +14,13 @@ export interface IProduct extends Document {
   updatedAt: Date;
 }
 
+// define upload file types
+export type ProductFiles = {
+  image: Express.Multer.File[];
+  gallery: Express.Multer.File[];
+};
+
+
 export type ProductCreationData = Pick<
   IProduct,
   "title" | "description" | "image" | "gallery" | "price" | "category"

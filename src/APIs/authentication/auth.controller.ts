@@ -3,6 +3,10 @@ import authService from "./auth.service.ts";
 
 import type { Request, Response } from "express";
 
+// import utils
+import sendEmail from "../../utils/mail.ts";
+import generateRandomCode from "../../utils/generateRandomCode.ts";
+
 class AuthController {
   constructor() {}
 
@@ -18,13 +22,11 @@ class AuthController {
 
       const createdUser = authService.register(username, email, password);
 
-      res
-        .status(201)
-        .json({
-          success: true,
-          message: "User registered successfully",
-          user: createdUser,
-        });
+      res.status(201).json({
+        success: true,
+        message: "User registered successfully",
+        data: { createdUser },
+      });
     } catch (error) {
       console.error(error);
       res
@@ -41,7 +43,7 @@ class AuthController {
           .status(400)
           .json({ success: false, message: "Email and password are required" });
       }
-     
+
       const user = await authService.login(email, password);
 
       // Generate JWT tokens
@@ -77,7 +79,7 @@ class AuthController {
     }
   }
 
-  async logout(req: Request, res: Response) : Promise<Response | void> {
+  async logout(req: Request, res: Response): Promise<Response | void> {
     try {
       res.clearCookie("accessToken");
       res.clearCookie("refreshToken");
@@ -92,14 +94,65 @@ class AuthController {
     }
   }
 
-  async forgotPassword(req: Request, res: Response) {
-    // Forgot password logic here
+  async forgotPassword(req: Request, res: Response): Promise<Response | void> {
+    try {
+      const email = req.body.email;
+      const user = await authService.findUserByEmail(email);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+      const reciever = user.email;
+      const subject = "Password Reset Request";
+      const htmlContent = `<p>Click <a href="https://yourapp.com/auth/reset-password?email=${encodeURIComponent(
+        reciever,
+      )}">here</a> to reset your password.</p>`;
+      const result = await sendEmail(reciever, subject, htmlContent);
+      req.session!.email = reciever;
+      res.status(200).json({
+        success: true,
+        message: "Password reset email sent",
+        data: { result },
+      });
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
   }
 
   async resetPassword(req: Request, res: Response) {
-    // Reset password logic here
+    try {
+      const email = req.session!.email;
+      const { newPassword } = req.body;
+      if (!email || !newPassword) {
+        {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Email and new password and verification code are required",
+          });
+        }
+      }
+      const user = await authService.findUserByEmail(email);
+      const updatedUser = await authService.resetPassword(
+        newPassword,
+        user._id.toString(),
+      );
+      res.status(200).json({
+        success: true,
+        message: "Password reset successfully",
+        data: { updatedUser },
+      });
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
   }
-
 }
 
 export default new AuthController();

@@ -7,13 +7,7 @@ import productService from "./product.service.ts";
 // import types
 import type { Request, Response } from "express";
 import type { IProduct } from "./product.interface.ts";
-
-// define upload file types
-type ProductFiles = {
-  image: Express.Multer.File[];
-  gallery: Express.Multer.File[];
-};
-
+import type { ProductFiles } from "./product.interface.ts";
 class ProductController {
   constructor() {}
 
@@ -22,7 +16,7 @@ class ProductController {
       const products: IProduct[] = await productService.getAllProducts();
       return res.status(200).json({
         success: true,
-        products: products,
+        data: { products },
       });
     } catch (error) {
       console.log(error);
@@ -43,7 +37,7 @@ class ProductController {
       }
       return res.status(200).json({
         success: true,
-        product: product,
+        data: { product },
       });
     } catch (error) {
       console.log(error);
@@ -99,7 +93,7 @@ class ProductController {
       return res.status(201).json({
         success: true,
         message: "Product created successfully",
-        createdProduct: createdProduct,
+        data: { createdProduct },
       });
     } catch (error) {
       console.log(error);
@@ -165,8 +159,8 @@ class ProductController {
       }
       return res.status(200).json({
         success: true,
-        message: `Product with id ${id} updated successfully`,
-        updatedProduct: updatedProduct,
+        message: `Product updated successfully`,
+        data: { updatedProduct },
       });
     } catch (error) {
       console.log(error);
@@ -188,7 +182,8 @@ class ProductController {
       }
       return res.status(200).json({
         success: true,
-        message: `Product with id ${id} deleted successfully`,
+        message: `Product deleted successfully`,
+        data: { deletedProduct },
       });
     } catch (error) {
       console.log(error);

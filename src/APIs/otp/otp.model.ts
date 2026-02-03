@@ -13,15 +13,16 @@ const otpSchema = new mongoose.Schema<IOtp>({
   },
   createdAt: {
     type: Date,
+    default: Date.now,
     required: true,
   },
-  expiresAt: {
-    type: Date,
-    required: true,
-  },
-  isDeleted: {
+  isExpired: {
     type: Boolean,
     default: false,
+  },
+  expiredAt: {
+    type: Date,
+    default: null,
   },
 });
 

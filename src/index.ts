@@ -1,6 +1,7 @@
 // import packeges
 import express from "express";
 import cookieParser from "cookie-parser";
+import session from "express-session";
 
 // import types
 import type { Application } from "express";
@@ -16,6 +17,13 @@ const app: Application = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "default_secret",
+    resave: false,
+    saveUninitialized: true,
+  }),
+);
 
 // routes
 app.use("/api", router);

@@ -1,7 +1,7 @@
 export interface IOtp {
-    email: string;
-    code: string;
-    isDeleted:boolean;
-    createdAt: Date;
-    expiresAt: Date;
+  email: string;
+  code: string;
+  createdAt: Date;
+  isExpired: boolean;
+  expiredAt: Date;
 }

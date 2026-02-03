@@ -19,7 +19,7 @@ class CategoryController {
       const categories = await categoryService.getAllCategories();
       return res.status(200).json({
         success: true,
-        categories: categories,
+        data: { categories },
       });
     } catch (error) {
       console.log(error);
@@ -40,7 +40,7 @@ class CategoryController {
       }
       return res.status(200).json({
         success: true,
-        category: category,
+        data: { category },
       });
     } catch (error) {
       console.log(error);
@@ -89,7 +89,7 @@ class CategoryController {
       return res.status(201).json({
         success: true,
         message: "Category created successfully",
-        createdCategory: createdCategory,
+        data: { createdCategory },
       });
     } catch (error) {
       console.log(error);
@@ -139,7 +139,7 @@ class CategoryController {
       return res.status(200).json({
         success: true,
         message: "Category updated successfully",
-        updatedCategory: updatedCategory,
+        data: { updatedCategory },
       });
     } catch (error) {
       console.log(error);
@@ -161,7 +161,7 @@ class CategoryController {
       return res.status(200).json({
         success: true,
         message: "Category deleted successfully",
-        deletedCategory: deletedCategory,
+        data: { deletedCategory },
       });
     } catch (error) {
       console.log(error);

@@ -1,6 +1,15 @@
+// import model
 import User from "../user/user.model.ts";
 
+// import types
 import type { IUser } from "../user/user.interface.ts";
+
+// import uitls
+import sendEmail from "../../utils/mail.ts";
+import generateRandomCode from "../../utils/generateRandomCode.ts";
+
+// import services
+import otpService from "../otp/otp.service.ts";
 class AuthService {
   constructor() {}
 
@@ -40,13 +49,39 @@ class AuthService {
     return user;
   }
 
-  async forgotPassword(email: string) {
-    // Implementation for forgot password
+  async findUserByEmail(email: string) {
+    const user = await User.findOne({ email, isDeleted: false });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
   }
 
-  async resetPassword(token: string, newPassword: string) {
-    // Implementation for reset password
-  } 
+  forgotPassword(email: string) {
+    const code = generateRandomCode();
+    const result = sendEmail(
+      email,
+      "Welcome to our Shop",
+      ` <div>
+            <h2>Verification Email</h2>
+            <p>your verification code is ${code}</p>
+        </div>`,
+    );
+    return result;
+  }
+
+  async resetPassword(newPassword: string, userId: string): Promise<IUser | null> {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { password: newPassword },
+      { new: true },
+    );
+    return updatedUser;
+  }
 }
 
 export default new AuthService();

@@ -2,13 +2,13 @@ import nodemailer from "nodemailer";
 
 const sendEmail = async (
   receiver: string,
-  title: string,
+  subject: string,
   htmlContent: string,
 ): Promise<any> => {
   try {
     // Validate input
-    if (!receiver || !title || !htmlContent) {
-      throw new Error("Receiver, title and htmlContent are required");
+    if (!receiver || !subject || !htmlContent) {
+      throw new Error("Receiver, subject and htmlContent are required");
     }
 
     // Validate Email User and Pass from environment variables
@@ -44,7 +44,7 @@ const sendEmail = async (
         address: emailUser,
       },
       to: receiver,
-      subject: title,
+      subject: subject,
       html: htmlContent,
       // Optional text version for non-HTML clients
       text: htmlContent.replace(/<[^>]*>/g, ""),
@@ -71,4 +71,4 @@ const sendEmail = async (
   }
 };
 
-module.exports = sendEmail;
+export default sendEmail;

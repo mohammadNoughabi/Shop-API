@@ -10,3 +10,12 @@ export type RegisterData = {
   password: string;
   profilePic?: string;
 };
+
+export type forgotPasswordData = {
+  email: string;
+}
+
+export type resetPasswordData = {
+  verificationCode:string;
+  newPassword: string;
+}
