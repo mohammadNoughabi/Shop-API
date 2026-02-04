@@ -1,20 +1,206 @@
+import { ORDER_STATUSES, ORDER_STATUS_FLOW } from "./order.constants";
+import type { OrderStatus } from "./order.constants";
+import type { IOrder } from "./order.interface";
+import type { Request, Response } from "express";
+
+import orderService from "./order.service";
+
+// import utils
+import { generateTrackingNumber } from "../../utils/generateTrackingNumber";
+
 class OrderController {
-    constructor() {}
+  constructor() {}
 
-    async getAll () {}
+  async getAll(req: Request, res: Response): Promise<Response> {
+    try {
+      const orders = await orderService.getAllOrders();
+      return res.status(200).json({
+        success: true,
+        message: "Orders fetched successfully",
+        data: { orders },
+      });
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
 
-    async getByTrackingNumber () {}
+  async getByTrackingNumber(req: Request, res: Response): Promise<Response> {
+    try {
+      const trackingNumber = req.body.trackingNumber;
+      if (!trackingNumber || String(trackingNumber).length < 6) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid tracking number" });
+      }
+      const existingOrder =
+        await orderService.getOrderByTrackingNumber(trackingNumber);
+      if (!existingOrder) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Order not found" });
+      }
+      return res.status(200).json({
+        success: true,
+        message: "Order found successfully",
+        data: { order: existingOrder },
+      });
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
 
-    async getByStatus () {}
+  async getByStatus(req: Request, res: Response): Promise<Response> {
+    try {
+      const status = req.body.status;
+      if (!status || !ORDER_STATUSES.includes(status)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid status" });
+      }
+      const orders = await orderService.getOrdersByStatus(status);
+      return res.status(200).json({
+        success: true,
+        message: "Orders fetched successfully",
+        data: { orders },
+      });
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
 
-    async create () {}
+  async create(req: Request, res: Response): Promise<Response> {
+    try {
+      const data = req.body;
+      if (
+        !data.items ||
+        !data.total ||
+        !data.address ||
+        !data.postalCode ||
+        !data.phone ||
+        !data.user
+      ) {
+        return res
+          .status(400)
+          .json({ success: false, message: "All fields required" });
+      }
+      const trackingNumber = generateTrackingNumber(10);
+      data.trackingNumber = trackingNumber;
 
-    async update () {}
+      const createdOrder = await orderService.createOrder(data);
+      return res.status(201).json({
+        success: true,
+        message: "Order created successfully",
+        data: { createdOrder },
+      });
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
 
-    async updateStatus () {}
+  async update(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = req.params.id as string;
+      const updateData = req.body;
+      if (!updateData || Object.keys(updateData).length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid update data",
+        });
+      }
+      const updatedOrder = await orderService.updateOrder(id, updateData);
+      if (!updatedOrder) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found",
+        });
+      }
+      return res.status(200).json({
+        success: true,
+        message: "Order updated successfully",
+        data: { updatedOrder },
+      });
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
 
-    async delete () {}
+  async updateStatus(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = req.params.id as string;
+      const { newStatus } = req.body as { newStatus: OrderStatus };
 
+      if (!newStatus) {
+        return res.status(400).json({
+          success: false,
+          message: "newStatus is required",
+        });
+      }
+
+      if (!ORDER_STATUSES.includes(newStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid order status",
+        });
+      }
+
+      const order = await orderService.getOrderById(id);
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found",
+        });
+      }
+
+      const allowedNextStatuses =
+        ORDER_STATUS_FLOW[order.status as OrderStatus];
+
+      if (!allowedNextStatuses.includes(newStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot change order status from ${order.status} to ${newStatus}`,
+        });
+      }
+
+      const updatedOrder = await orderService.updateOrderStatus(id, newStatus);
+
+      return res.status(200).json({
+        success: true,
+        message: "Order status updated successfully",
+        data: { updatedOrder },
+      });
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
+
+  async delete(req: Request, res: Response) {
+    try {
+      const id = req.params.id as string;
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
+  }
 }
 
 export default new OrderController();

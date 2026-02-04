@@ -24,6 +24,13 @@ class CategoryService {
   async createCategory(
     creationData: CategoryCreationData,
   ): Promise<ICategory | null> {
+    const existingCategory = await Category.findOne({
+      title: creationData.title,
+      isDeleted: false,
+    });
+    if (existingCategory) {
+      return null;
+    }
     const newCategory = await Category.create(creationData);
     return newCategory;
   }
@@ -32,6 +39,13 @@ class CategoryService {
     id: string,
     updateData: CategoryUpdateData,
   ): Promise<ICategory | null> {
+    const existingCategory: ICategory | null = await Category.findOne({
+      _id: id,
+      isDeleted: false,
+    });
+    if (!existingCategory) {
+      return null;
+    }
     const updatedCategory = await Category.findByIdAndUpdate(id, updateData, {
       new: true,
     });

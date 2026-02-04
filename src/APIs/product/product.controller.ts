@@ -1,6 +1,3 @@
-// import models
-import Product from "./product.model.ts";
-
 // import services
 import productService from "./product.service.ts";
 
@@ -11,7 +8,7 @@ import type { ProductFiles } from "./product.interface.ts";
 class ProductController {
   constructor() {}
 
-  async getAll(req: Request, res: Response) {
+  async getAll(req: Request, res: Response): Promise<Response> {
     try {
       const products: IProduct[] = await productService.getAllProducts();
       return res.status(200).json({
@@ -26,7 +23,7 @@ class ProductController {
     }
   }
 
-  async getById(req: Request, res: Response) {
+  async getById(req: Request, res: Response): Promise<Response> {
     try {
       const id = req.params.id as string;
       const product: IProduct | null = await productService.getProductById(id);
@@ -47,24 +44,13 @@ class ProductController {
     }
   }
 
-  async create(req: Request, res: Response) {
+  async create(req: Request, res: Response): Promise<Response> {
     try {
       const { title, description, price, category } = req.body;
       if (!title || !description || !price || !category) {
         return res
           .status(400)
           .json({ success: false, message: "Missing required fields" });
-      }
-
-      const existingProduct = await Product.findOne({
-        title: title,
-        isDeleted: false,
-      });
-      if (existingProduct) {
-        return res.status(409).json({
-          success: false,
-          message: "Product with this name already exists",
-        });
       }
 
       const files = req.files
@@ -89,6 +75,12 @@ class ProductController {
         price,
         category,
       });
+      if (!createdProduct) {
+        return res.status(409).json({
+          success: false,
+          message: "Product with this title already exists",
+        });
+      }
 
       return res.status(201).json({
         success: true,
@@ -103,18 +95,9 @@ class ProductController {
     }
   }
 
-  async update(req: Request, res: Response) {
+  async update(req: Request, res: Response): Promise<Response> {
     try {
       const id = req.params.id as string;
-      const existingProduct = await Product.findOne({
-        _id: id,
-        isDeleted: false,
-      });
-      if (!existingProduct) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Product not found" });
-      }
       const { title, description, price, category } = req.body;
       if (!title || !description || !price || !category) {
         return res
@@ -170,7 +153,7 @@ class ProductController {
     }
   }
 
-  async delete(req: Request, res: Response) {
+  async delete(req: Request, res: Response): Promise<Response> {
     try {
       const id = req.params.id as string;
       const deletedProduct = await productService.deleteProduct(id);

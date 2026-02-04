@@ -2,7 +2,11 @@
 import Product from "./product.model.ts";
 
 // import types
-import type { IProduct } from "./product.interface.ts";
+import type {
+  IProduct,
+  ProductCreationData,
+  ProductUpdateData,
+} from "./product.interface.ts";
 class ProductService {
   constructor() {}
 
@@ -17,24 +21,30 @@ class ProductService {
   }
 
   async createProduct(
-    creationData: Pick<
-      IProduct,
-      "title" | "description" | "image" | "gallery" | "price" | "category"
-    >,
+    creationData: ProductCreationData,
   ): Promise<IProduct | null> {
+    const existingProduct = await Product.findOne({
+      title: creationData.title,
+      isDeleted: false,
+    });
+    if (existingProduct) {
+      return null;
+    }
     const newProduct = await Product.create(creationData);
     return newProduct;
   }
 
   async updateProduct(
     id: string,
-    updateData: Partial<
-      Pick<
-        IProduct,
-        "title" | "description" | "image" | "gallery" | "price" | "category"
-      >
-    >,
+    updateData: ProductUpdateData,
   ): Promise<IProduct | null> {
+    const existingProduct = await Product.findOne({
+      _id: id,
+      isDeleted: false,
+    });
+    if (!existingProduct) {
+      return null;
+    }
     const updatedProduct = await Product.findByIdAndUpdate(id, updateData, {
       new: true,
     });
@@ -42,6 +52,13 @@ class ProductService {
   }
 
   async deleteProduct(id: string): Promise<IProduct | null> {
+    const existingProduct = await Product.findOne({
+      _id: id,
+      isDeleted: false,
+    });
+    if (!existingProduct) {
+      return null;
+    }
     const deletedProduct = await Product.findByIdAndUpdate(
       id,
       { isDeleted: true, deletedAt: new Date() },

@@ -1,6 +1,3 @@
-// import models
-import Category from "./category.model.ts";
-
 //import services
 import categoryService from "./category.service.ts";
 
@@ -70,15 +67,6 @@ class CategoryController {
           message: "Thumbnail is required",
         });
       }
-      const existingCategory = await Category.findOne({
-        title: data.title,
-        isDeleted: false,
-      });
-      if (existingCategory) {
-        return res
-          .status(409)
-          .json({ success: false, message: "Category already exists" });
-      }
       const creationData: CategoryCreationData = {
         title: data.title,
         description: data.description,
@@ -86,6 +74,14 @@ class CategoryController {
       };
       const createdCategory =
         await categoryService.createCategory(creationData);
+      if (!createdCategory) {
+        return res
+          .status(409)
+          .json({
+            success: false,
+            message: "Category with this title already exists",
+          });
+      }
       return res.status(201).json({
         success: true,
         message: "Category created successfully",
@@ -102,15 +98,6 @@ class CategoryController {
   async update(req: Request, res: Response): Promise<Response> {
     try {
       const id = req.params.id as string;
-      const existingCategory = await Category.findOne({
-        _id: id,
-        isDeleted: false,
-      });
-      if (!existingCategory) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Category not found!" });
-      }
       const data = req.body;
       const updateData: CategoryUpdateData = {};
       if (data.title && data.title.trim() !== "") {
