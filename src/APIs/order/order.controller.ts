@@ -1,9 +1,9 @@
-import { ORDER_STATUSES, ORDER_STATUS_FLOW } from './order.constants';
-import type { OrderStatus } from './order.constants';
-import type { OrderCreationData, OrderUpdateData } from './order.interface';
+import { ORDER_STATUSES, ORDER_STATUS_FLOW } from './order.constants.ts';
+import type { OrderStatus } from './order.constants.ts';
+import type { OrderCreationData, OrderUpdateData } from './order.interface.ts';
 import type { Request, Response } from 'express';
 
-import orderService from './order.service';
+import orderService from './order.service.ts';
 
 class OrderController {
   async getAll(req: Request, res: Response): Promise<Response> {

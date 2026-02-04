@@ -2,7 +2,7 @@
 import type { Request, Response } from 'express';
 
 // import service
-import otpService from './otp.service';
+import otpService from './otp.service.ts';
 
 class OtpController {
   async generate(req: Request, res: Response) {

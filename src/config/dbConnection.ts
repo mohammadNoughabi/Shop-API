@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-import { getErrorMessage } from '../utils/getErrorMessage';
+import { getErrorMessage } from '../utils/getErrorMessage.ts';
 
 const connectDb = async () => {
   const uri = process.env.MONGO_URI;

@@ -1,4 +1,4 @@
-import userService from './user.service';
+import userService from './user.service.ts';
 
 import type { Request, Response } from 'express';
 

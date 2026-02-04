@@ -1,12 +1,12 @@
 // import models
-import Otp from './otp.model';
+import Otp from './otp.model.ts';
 
 // import types
-import type { IOtp } from './otp.interface';
+import type { IOtp } from './otp.interface.ts';
 
 // import utils
-import generateRandomCode from '../../utils/generateRandomCode';
-import sendEmail from '../../utils/mail';
+import generateRandomCode from '../../utils/generateRandomCode.ts';
+import sendEmail from '../../utils/mail.ts';
 
 class OtpService {
   async generateOtp(email: string): Promise<Partial<IOtp>> {

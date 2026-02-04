@@ -1,4 +1,4 @@
-import jwtService from '../APIs/authentication/jwt.service';
+import jwtService from '../APIs/authentication/jwt.service.ts';
 
 import type { Request, Response, NextFunction } from 'express';
 

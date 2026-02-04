@@ -1,8 +1,8 @@
-import Order from './order.model';
+import Order from './order.model.ts';
 
 // import utils
-import { generateTrackingNumber } from '../../utils/generateTrackingNumber';
-import { getErrorMessage } from '../../utils/getErrorMessage';
+import { generateTrackingNumber } from '../../utils/generateTrackingNumber.ts';
+import { getErrorMessage } from '../../utils/getErrorMessage.ts';
 
 // import types
 import type {

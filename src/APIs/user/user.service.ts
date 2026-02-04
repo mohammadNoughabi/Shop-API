@@ -1,6 +1,6 @@
-import User from './user.model';
+import User from './user.model.ts';
 
-import type { IUser } from './user.interface';
+import type { IUser } from './user.interface.ts';
 
 class UserService {
   async getUserProfile(id: string): Promise<IUser | null> {

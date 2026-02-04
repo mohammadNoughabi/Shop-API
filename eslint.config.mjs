@@ -1,22 +1,18 @@
 import tseslint from 'typescript-eslint';
 import globals from 'globals';
 import js from '@eslint/js';
+import importPlugin from 'eslint-plugin-import';
 
 export default tseslint.config(
+  // ====================
+  // BASIC CONFIGURATION
+  // ====================
   {
-    // ====================
-    // BASIC CONFIGURATION
-    // ====================
     files: ['**/*.ts', '**/*.tsx'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    ignores: [
-      '**/dist/**',
-      '**/node_modules/**',
-      '**/*.d.ts',
-      '**/coverage/**',
-      '**/build/**',
-      '**/uploads/**',
-    ],
+    plugins: {
+      import: importPlugin,
+    },
     languageOptions: {
       globals: {
         ...globals.node,
@@ -27,11 +23,26 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
+    settings: {
+      'import/resolver': {
+        typescript: {
+          alwaysTryTypes: true,
+        },
+      },
+    },
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/*.d.ts',
+      '**/coverage/**',
+      '**/build/**',
+      '**/uploads/**',
+    ],
   },
+  // ====================
+  // TYPE SAFETY RULES
+  // ====================
   {
-    // ====================
-    // TYPE SAFETY RULES
-    // ====================
     rules: {
       // Prevents awaiting non-promise values
       '@typescript-eslint/await-thenable': 'error',
@@ -59,10 +70,10 @@ export default tseslint.config(
       ],
     },
   },
+  // ====================
+  // CODE QUALITY RULES
+  // ====================
   {
-    // ====================
-    // CODE QUALITY RULES
-    // ====================
     rules: {
       // Prevents unused variables (allow variables starting with underscore)
       '@typescript-eslint/no-unused-vars': [
@@ -99,10 +110,10 @@ export default tseslint.config(
       'no-else-return': 'warn',
     },
   },
+  // ====================
+  // ASYNC/AWAIT RULES
+  // ====================
   {
-    // ====================
-    // ASYNC/AWAIT RULES
-    // ====================
     rules: {
       // Prevents returning await unnecessarily
       'no-return-await': 'error',
@@ -115,6 +126,23 @@ export default tseslint.config(
 
       // Prevents await inside loops (can be optimized)
       'no-await-in-loop': 'warn',
+    },
+  },
+  // ====================
+  // MODULE RESOLUTION
+  // ====================
+  {
+    rules: {
+      'import/extensions': [
+        'error',
+        'always',
+        {
+          ts: 'always',
+          tsx: 'always',
+          js: 'always',
+          jsx: 'always',
+        },
+      ],
     },
   },
 );
