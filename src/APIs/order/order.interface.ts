@@ -1,14 +1,13 @@
-import { Document, Schema } from "mongoose";
+import type { Document, Schema } from 'mongoose';
 
 // import types
-import type { OrderStatus } from "./order.constants.ts";
-import type { IPayment } from "../payment/payment.interface.ts";
+import type { OrderStatus } from './order.constants.ts';
 
-export type OrderItem = {
+export interface OrderItem {
   product: Schema.Types.ObjectId;
   quantity: number;
   price: number;
-};
+}
 
 export interface IOrder extends Document {
   items: OrderItem[];
@@ -27,23 +26,12 @@ export interface IOrder extends Document {
 
 export type OrderCreationData = Pick<
   IOrder,
-  | "items"
-  | "total"
-  | "address"
-  | "postalCode"
-  | "phone"
-  | "trackingNumber"
-  | "user"
+  'items' | 'total' | 'address' | 'postalCode' | 'phone' | 'user'
 >;
 
 export type OrderUpdateData = Partial<
   Pick<
     IOrder,
-    | "items"
-    | "total"
-    | "address"
-    | "postalCode"
-    | "phone"
-    | "trackingNumber"
+    'items' | 'total' | 'address' | 'postalCode' | 'phone' | 'trackingNumber'
   >
 >;

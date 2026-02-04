@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import type { Document } from 'mongoose';
 
 export interface ICategory extends Document {
   title: string;
@@ -12,9 +12,9 @@ export interface ICategory extends Document {
 
 export type CategoryCreationData = Pick<
   ICategory,
-  "title" | "description" | "thumbnail"
+  'title' | 'description' | 'thumbnail'
 >;
 
 export type CategoryUpdateData = Partial<
-  Pick<ICategory, "title" | "description" | "thumbnail">
+  Pick<ICategory, 'title' | 'description' | 'thumbnail'>
 >;

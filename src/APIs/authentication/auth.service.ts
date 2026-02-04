@@ -1,18 +1,14 @@
 // import model
-import User from "../user/user.model.ts";
+import User from '../user/user.model.ts';
 
 // import types
-import type { IUser } from "../user/user.interface.ts";
+import type { IUser } from '../user/user.interface.ts';
 
 // import uitls
-import sendEmail from "../../utils/mail.ts";
-import generateRandomCode from "../../utils/generateRandomCode.ts";
+import sendEmail from '../../utils/mail.ts';
+import generateRandomCode from '../../utils/generateRandomCode.ts';
 
-// import services
-import otpService from "../otp/otp.service.ts";
 class AuthService {
-  constructor() {}
-
   async register(
     username: string,
     email: string,
@@ -22,7 +18,7 @@ class AuthService {
     const existingUser = await User.findOne({ email, isDeleted: false });
 
     if (existingUser) {
-      throw new Error("User already exists with this email");
+      throw new Error('User already exists with this email');
     }
     const createdUser = new User({
       username,
@@ -38,13 +34,13 @@ class AuthService {
     const user = await User.findOne({ email, isDeleted: false });
 
     if (!user) {
-      throw new Error("User not found");
+      throw new Error('User not found');
     }
 
     // Compare the hashed passwords
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      throw new Error("Invalid credentials");
+      throw new Error('Invalid credentials');
     }
     return user;
   }
@@ -52,7 +48,7 @@ class AuthService {
   async findUserByEmail(email: string) {
     const user = await User.findOne({ email, isDeleted: false });
     if (!user) {
-      throw new Error("User not found");
+      return null;
     }
     return user;
   }
@@ -61,7 +57,7 @@ class AuthService {
     const code = generateRandomCode();
     const result = sendEmail(
       email,
-      "Welcome to our Shop",
+      'Welcome to our Shop',
       ` <div>
             <h2>Verification Email</h2>
             <p>your verification code is ${code}</p>
@@ -70,10 +66,13 @@ class AuthService {
     return result;
   }
 
-  async resetPassword(newPassword: string, userId: string): Promise<IUser | null> {
+  async resetPassword(
+    newPassword: string,
+    userId: string,
+  ): Promise<IUser | null> {
     const user = await User.findById(userId);
     if (!user) {
-      throw new Error("User not found");
+      throw new Error('User not found');
     }
     const updatedUser = await User.findByIdAndUpdate(
       userId,

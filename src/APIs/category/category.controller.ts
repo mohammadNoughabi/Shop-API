@@ -1,16 +1,14 @@
 //import services
-import categoryService from "./category.service.ts";
+import categoryService from './category.service.ts';
 
 // import types
-import type { Request, Response } from "express";
+import type { Request, Response } from 'express';
 import type {
   CategoryCreationData,
   CategoryUpdateData,
-} from "./category.interface.ts";
+} from './category.interface.ts';
 
 class CategoryController {
-  constructor() {}
-
   async getAll(req: Request, res: Response): Promise<Response> {
     try {
       const categories = await categoryService.getAllCategories();
@@ -22,7 +20,7 @@ class CategoryController {
       console.log(error);
       return res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 
@@ -33,7 +31,7 @@ class CategoryController {
       if (!category) {
         return res
           .status(404)
-          .json({ success: false, message: "Category not found" });
+          .json({ success: false, message: 'Category not found' });
       }
       return res.status(200).json({
         success: true,
@@ -43,7 +41,7 @@ class CategoryController {
       console.log(error);
       return res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 
@@ -52,19 +50,19 @@ class CategoryController {
       const data = req.body;
       if (
         !data.title ||
-        data.title.trim() === "" ||
+        data.title.trim() === '' ||
         !data.description ||
-        data.description.trim() === ""
+        data.description.trim() === ''
       ) {
         return res
           .status(400)
-          .json({ success: false, message: "All fields are required" });
+          .json({ success: false, message: 'All fields are required' });
       }
       const file = req.file ? (req.file as Express.Multer.File) : null;
       if (!file) {
         return res.status(400).json({
           success: false,
-          message: "Thumbnail is required",
+          message: 'Thumbnail is required',
         });
       }
       const creationData: CategoryCreationData = {
@@ -75,23 +73,21 @@ class CategoryController {
       const createdCategory =
         await categoryService.createCategory(creationData);
       if (!createdCategory) {
-        return res
-          .status(409)
-          .json({
-            success: false,
-            message: "Category with this title already exists",
-          });
+        return res.status(409).json({
+          success: false,
+          message: 'Category with this title already exists',
+        });
       }
       return res.status(201).json({
         success: true,
-        message: "Category created successfully",
+        message: 'Category created successfully',
         data: { createdCategory },
       });
     } catch (error) {
       console.log(error);
       return res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 
@@ -100,17 +96,17 @@ class CategoryController {
       const id = req.params.id as string;
       const data = req.body;
       const updateData: CategoryUpdateData = {};
-      if (data.title && data.title.trim() !== "") {
+      if (data.title && data.title.trim() !== '') {
         updateData.title = data.title;
       }
-      if (data.description && data.description.trim() !== "") {
+      if (data.description && data.description.trim() !== '') {
         updateData.description = data.description;
       }
       const file = req.file ? (req.file as Express.Multer.File) : null;
       if (!file) {
         return res.status(400).json({
           success: false,
-          message: "Thumbnail is required",
+          message: 'Thumbnail is required',
         });
       }
       updateData.thumbnail = file.filename;
@@ -121,18 +117,18 @@ class CategoryController {
       if (!updatedCategory) {
         return res
           .status(404)
-          .json({ success: false, message: "Category not found" });
+          .json({ success: false, message: 'Category not found' });
       }
       return res.status(200).json({
         success: true,
-        message: "Category updated successfully",
+        message: 'Category updated successfully',
         data: { updatedCategory },
       });
     } catch (error) {
       console.log(error);
       return res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 
@@ -143,18 +139,18 @@ class CategoryController {
       if (!deletedCategory) {
         return res
           .status(404)
-          .json({ success: false, message: "Category not found" });
+          .json({ success: false, message: 'Category not found' });
       }
       return res.status(200).json({
         success: true,
-        message: "Category deleted successfully",
+        message: 'Category deleted successfully',
         data: { deletedCategory },
       });
     } catch (error) {
       console.log(error);
       return res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 }

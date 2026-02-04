@@ -1,23 +1,21 @@
-import jwt from "jsonwebtoken";
-import type { JwtPayload } from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
+import type { JwtPayload } from 'jsonwebtoken';
 
 class JwtService {
-  constructor() {}
-
   // Generate tokens (synchronous)
   generateAccessToken(payload: JwtPayload): string {
     return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET!, {
-      expiresIn: "15m",
+      expiresIn: '15m',
     });
   }
 
   generateRefreshToken(payload: JwtPayload): string {
     return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET!, {
-      expiresIn: "7d",
+      expiresIn: '7d',
     });
   }
 
-  validateAccessToken(token: string): JwtPayload  {
+  validateAccessToken(token: string): JwtPayload {
     return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as JwtPayload;
   }
 
@@ -26,7 +24,7 @@ class JwtService {
   }
 
   // Token refresh endpoint logic
-  async handleRefreshToken(refreshToken: string) {
+  handleRefreshToken(refreshToken: string) {
     const decoded = this.validateRefreshToken(refreshToken);
 
     // Generate new tokens
@@ -44,7 +42,6 @@ class JwtService {
 
     return { newAccessToken, newRefreshToken };
   }
-
 }
 
 export default new JwtService();

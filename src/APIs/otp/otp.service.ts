@@ -1,16 +1,14 @@
 // import models
-import Otp from "./otp.model";
+import Otp from './otp.model';
 
 // import types
-import type { IOtp } from "./otp.interface";
+import type { IOtp } from './otp.interface';
 
 // import utils
-import generateRandomCode from "../../utils/generateRandomcode";
-import sendEmail from "../../utils/mail";
+import generateRandomCode from '../../utils/generateRandomCode';
+import sendEmail from '../../utils/mail';
 
 class OtpService {
-  constructor() {}
-
   async generateOtp(email: string): Promise<Partial<IOtp>> {
     const code = generateRandomCode();
     const otp = await Otp.create({
@@ -27,25 +25,25 @@ class OtpService {
       createdAt: -1,
     });
     if (!otpRecord) {
-      throw new Error("No valid OTP found for this email");
+      throw new Error('No valid OTP found for this email');
     }
-    if (otpRecord && otpRecord.expiredAt < new Date()) {
+    if (otpRecord.expiredAt < new Date()) {
       otpRecord.isExpired = true;
       await otpRecord.save();
     }
-    const subject = "Your OTP Code";
+    const subject = 'Your OTP Code';
     const htmlContent = `<div>
                             <h1>Verification code </h1>
                             <p>Your OTP code is: ${otpRecord.code} It will expire soon.</p>
-                        </div>`;
+                         </div>`;
     const result = await sendEmail(email, subject, htmlContent);
     return result;
   }
 
-  async verifyOtp(email: string, otp: string) {
+  async verifyOtp(email: string, otp: string): Promise<boolean> {
     const otpRecord = await Otp.findOne({ email, code: otp, isExpired: false });
     if (!otpRecord) {
-      throw new Error("Invalid OTP");
+      return false;
     }
     return true;
   }

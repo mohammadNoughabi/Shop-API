@@ -1,13 +1,11 @@
 // import services
-import productService from "./product.service.ts";
+import productService from './product.service.ts';
 
 // import types
-import type { Request, Response } from "express";
-import type { IProduct } from "./product.interface.ts";
-import type { ProductFiles } from "./product.interface.ts";
+import type { Request, Response } from 'express';
+import type { IProduct } from './product.interface.ts';
+import type { ProductFiles } from './product.interface.ts';
 class ProductController {
-  constructor() {}
-
   async getAll(req: Request, res: Response): Promise<Response> {
     try {
       const products: IProduct[] = await productService.getAllProducts();
@@ -19,7 +17,7 @@ class ProductController {
       console.log(error);
       return res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 
@@ -30,7 +28,7 @@ class ProductController {
       if (!product) {
         return res
           .status(404)
-          .json({ success: false, message: "Product not found" });
+          .json({ success: false, message: 'Product not found' });
       }
       return res.status(200).json({
         success: true,
@@ -40,7 +38,7 @@ class ProductController {
       console.log(error);
       return res
         .status(500)
-        .json({ success: false, message: "Internal serever error" });
+        .json({ success: false, message: 'Internal serever error' });
     }
   }
 
@@ -50,27 +48,28 @@ class ProductController {
       if (!title || !description || !price || !category) {
         return res
           .status(400)
-          .json({ success: false, message: "Missing required fields" });
+          .json({ success: false, message: 'Missing required fields' });
       }
 
-      const files = req.files
-        ? (req.files as ProductFiles)
-        : { image: [], gallery: [] };
+      const files = req.files as ProductFiles | undefined;
 
-      const imageFile = files.image ? files.image[0] : null;
+      const imageFile = files?.image?.[0];
       if (!imageFile) {
         return res
           .status(400)
-          .json({ success: false, message: "Main image is required" });
+          .json({ success: false, message: 'Main image required' });
       }
+      const imageFileName = imageFile.filename;
 
-      const galleryFiles = files.gallery || [];
-      const galleryFilenames = galleryFiles.map((file) => file.filename);
+      const galleryFiles = files.gallery ?? [];
+      const galleryFilenames = galleryFiles.map(
+        (file: Express.Multer.File) => file.filename,
+      );
 
       const createdProduct = await productService.createProduct({
         title,
         description,
-        image: imageFile.filename,
+        image: imageFileName,
         gallery: galleryFilenames,
         price,
         category,
@@ -78,20 +77,20 @@ class ProductController {
       if (!createdProduct) {
         return res.status(409).json({
           success: false,
-          message: "Product with this title already exists",
+          message: 'Product with this title already exists',
         });
       }
 
       return res.status(201).json({
         success: true,
-        message: "Product created successfully",
+        message: 'Product created successfully',
         data: { createdProduct },
       });
     } catch (error) {
       console.log(error);
       return res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 
@@ -102,32 +101,37 @@ class ProductController {
       if (!title || !description || !price || !category) {
         return res
           .status(400)
-          .json({ success: false, message: "Missing required fields" });
+          .json({ success: false, message: 'Missing required fields' });
       }
 
-      const files = req.files
-        ? (req.files as ProductFiles)
-        : { image: [], gallery: [] };
+      const files = req.files as ProductFiles | undefined;
 
-      const imageFile = files.image ? files.image[0] : null;
-      const galleryFiles = files.gallery || [];
-      const galleryFilenames = galleryFiles.map((file) => file.filename);
+      const imageFile = files?.image?.[0];
+      if (!imageFile) {
+        return res
+          .status(400)
+          .json({ success: false, message: 'Main image required' });
+      }
+      const imageFileName = imageFile.filename;
+
+      const galleryFiles = files.gallery ?? [];
+      const galleryFilenames = galleryFiles.map(
+        (file: Express.Multer.File) => file.filename,
+      );
 
       const updateData: Partial<
         Pick<
           IProduct,
-          "title" | "description" | "image" | "gallery" | "price" | "category"
+          'title' | 'description' | 'image' | 'gallery' | 'price' | 'category'
         >
       > = {
         title,
         description,
+        image: imageFileName,
+        gallery: galleryFilenames,
         price,
         category,
       };
-
-      if (imageFile) {
-        updateData.image = imageFile.filename;
-      }
 
       if (galleryFilenames.length > 0) {
         updateData.gallery = galleryFilenames;
@@ -137,7 +141,7 @@ class ProductController {
       if (!updatedProduct) {
         return res.status(404).json({
           success: false,
-          message: "Product not found",
+          message: 'Product not found',
         });
       }
       return res.status(200).json({
@@ -149,7 +153,7 @@ class ProductController {
       console.log(error);
       return res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 
@@ -160,7 +164,7 @@ class ProductController {
       if (!deletedProduct) {
         return res.status(404).json({
           success: false,
-          message: "Product not found",
+          message: 'Product not found',
         });
       }
       return res.status(200).json({
@@ -172,7 +176,7 @@ class ProductController {
       console.log(error);
       return res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 }

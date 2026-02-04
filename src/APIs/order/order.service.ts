@@ -1,18 +1,17 @@
-import Order from "./order.model";
+import Order from './order.model';
 
 // import utils
-import { generateTrackingNumber } from "../../utils/generateTrackingNumber";
+import { generateTrackingNumber } from '../../utils/generateTrackingNumber';
+import { getErrorMessage } from '../../utils/getErrorMessage';
 
 // import types
 import type {
   IOrder,
   OrderCreationData,
   OrderUpdateData,
-} from "./order.interface";
+} from './order.interface';
 
 class OrderService {
-  constructor() {}
-
   async getAllOrders(): Promise<IOrder[]> {
     const orders: IOrder[] = await Order.find({ isDeleted: false });
     return orders;
@@ -44,18 +43,23 @@ class OrderService {
     return orders;
   }
 
-  async createOrder(data: OrderCreationData) {
-    let existingOrder = await Order.findOne({
-      trackingNumber: data.trackingNumber,
-    });
-    while (existingOrder) {
-      data.trackingNumber = generateTrackingNumber(10);
-      existingOrder = await Order.findOne({
-        trackingNumber: data.trackingNumber,
-      });
+  async createOrder(data: OrderCreationData): Promise<IOrder | null> {
+    const MAX_RETRIES = 5;
+
+    /* eslint-disable no-await-in-loop */
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const order = await Order.create({
+          ...data,
+          trackingNumber: generateTrackingNumber(10),
+        });
+
+        return order;
+      } catch (err: unknown) {
+        console.log(getErrorMessage(err));
+      }
     }
-    const newOrder: IOrder = await Order.create(data);
-    return newOrder;
+    return null;
   }
 
   async updateOrder(id: string, updateData: OrderUpdateData) {

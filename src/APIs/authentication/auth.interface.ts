@@ -1,21 +1,21 @@
-export type LoginData = {
+export interface LoginData {
   username: string;
   email: string;
   password: string;
-};
+}
 
-export type RegisterData = {
+export interface RegisterData {
   username: string;
   email: string;
   password: string;
   profilePic?: string;
-};
+}
 
-export type forgotPasswordData = {
+export interface forgotPasswordData {
   email: string;
 }
 
-export type resetPasswordData = {
-  verificationCode:string;
+export interface resetPasswordData {
+  verificationCode: string;
   newPassword: string;
 }

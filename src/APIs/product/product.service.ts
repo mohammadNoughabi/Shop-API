@@ -1,15 +1,13 @@
 // import models
-import Product from "./product.model.ts";
+import Product from './product.model.ts';
 
 // import types
 import type {
   IProduct,
   ProductCreationData,
   ProductUpdateData,
-} from "./product.interface.ts";
+} from './product.interface.ts';
 class ProductService {
-  constructor() {}
-
   async getAllProducts(): Promise<IProduct[]> {
     const products = await Product.find({ isDeleted: false });
     return products;

@@ -1,16 +1,14 @@
 // import models
-import Category from "./category.model.ts";
+import Category from './category.model.ts';
 
 // import types
 import type {
   ICategory,
   CategoryCreationData,
   CategoryUpdateData,
-} from "./category.interface.ts";
+} from './category.interface.ts';
 
 class CategoryService {
-  constructor() {}
-
   async getAllCategories(): Promise<ICategory[]> {
     const categories = await Category.find({ isDeleted: false });
     return categories;
@@ -53,6 +51,13 @@ class CategoryService {
   }
 
   async deleteCategory(id: string): Promise<ICategory | null> {
+    const existingCategory = await Category.findOne({
+      _id: id,
+      isDeleted: false,
+    });
+    if (!existingCategory) {
+      return null;
+    }
     const deletedCategory = await Category.findByIdAndUpdate(
       id,
       { isDeleted: true, deletedAt: new Date() },

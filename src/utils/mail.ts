@@ -1,14 +1,24 @@
-import nodemailer from "nodemailer";
+import nodemailer from 'nodemailer';
+
+interface SendEmailResponse {
+  success: boolean;
+  messageId?: string;
+  error?: string;
+  reciever: string;
+  timestamp: string;
+}
+
+import { getErrorMessage } from './getErrorMessage';
 
 const sendEmail = async (
-  receiver: string,
+  reciever: string,
   subject: string,
   htmlContent: string,
-): Promise<any> => {
+): Promise<SendEmailResponse> => {
   try {
     // Validate input
-    if (!receiver || !subject || !htmlContent) {
-      throw new Error("Receiver, subject and htmlContent are required");
+    if (!reciever || !subject || !htmlContent) {
+      throw new Error('reciever, subject and htmlContent are required');
     }
 
     // Validate Email User and Pass from environment variables
@@ -16,13 +26,13 @@ const sendEmail = async (
     const emailPass = process.env.EMAIL_PASS;
 
     if (!emailUser || !emailPass) {
-      throw new Error("Email credentials are not set");
+      throw new Error('Email credentials are not set');
     }
 
     // Create transporter with improved configuration
     const transporter = nodemailer.createTransport({
-      service: "gmail",
-      host: "smtp.gmail.com",
+      service: 'gmail',
+      host: 'smtp.gmail.com',
       port: 465,
       secure: true,
       auth: {
@@ -40,32 +50,33 @@ const sendEmail = async (
     // Prepare email options
     const mailOptions = {
       from: {
-        name: "Shop App",
+        name: 'Shop App',
         address: emailUser,
       },
-      to: receiver,
+      to: reciever,
       subject: subject,
       html: htmlContent,
       // Optional text version for non-HTML clients
-      text: htmlContent.replace(/<[^>]*>/g, ""),
+      text: htmlContent.replace(/<[^>]*>/g, ''),
     };
 
     // Send email
     const info = await transporter.sendMail(mailOptions);
 
-    console.log("Email sent successfully to", receiver);
+    console.log('Email sent successfully to', reciever);
     return {
       success: true,
       messageId: info.messageId,
-      receiver,
+      reciever,
       timestamp: new Date().toISOString(),
     };
-  } catch (error: any) {
-    console.error("Email send error:", error);
+  } catch (error: unknown) {
+    console.error('Email send error:', error);
+
     return {
       success: false,
-      error: error.message,
-      receiver,
+      error: getErrorMessage(error),
+      reciever,
       timestamp: new Date().toISOString(),
     };
   }

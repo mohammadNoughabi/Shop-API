@@ -1,16 +1,16 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 // import types
-import type { OrderItem, IOrder } from "./order.interface.ts";
+import type { OrderItem, IOrder } from './order.interface.ts';
 
 // import consts
-import { ORDER_STATUSES } from "./order.constants.ts";
+import { ORDER_STATUSES } from './order.constants.ts';
 
 const orderItemSchema = new mongoose.Schema<OrderItem>(
   {
     product: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
+      ref: 'Product',
       required: true,
     },
     quantity: {
@@ -33,42 +33,41 @@ const orderSchema = new mongoose.Schema<IOrder>(
   {
     items: {
       type: [orderItemSchema],
-      required: [true, "There is no item in your order"],
+      required: [true, 'There is no item in your order'],
       default: [],
     },
     total: {
       type: Number,
-      min: [0, "Total must be more than 0"],
+      min: [0, 'Total must be more than 0'],
     },
     address: {
       type: String,
-      required: [true, "Address can not be empty"],
-      minlength: [10, "Address must be at least 10 characters"],
+      required: [true, 'Address can not be empty'],
+      minlength: [10, 'Address must be at least 10 characters'],
     },
     postalCode: {
       type: String,
-      required: [true, "Postal Code can not be empty"],
-      minlength: [10, "Postal Code must be at least 10 digits"],
+      required: [true, 'Postal Code can not be empty'],
+      minlength: [10, 'Postal Code must be at least 10 digits'],
     },
     phone: {
       type: String,
-      required: [true, "Phone can not be empty"],
+      required: [true, 'Phone can not be empty'],
       minlength: 10,
     },
     trackingNumber: {
       type: Number,
       required: true,
-      min: 4,
-      max: 10,
+      unique: true,
     },
     status: {
       type: String,
       enum: ORDER_STATUSES,
-      default: "pending",
+      default: 'pending',
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
     isDeleted: {
@@ -85,6 +84,6 @@ const orderSchema = new mongoose.Schema<IOrder>(
   },
 );
 
-const Order = mongoose.model<IOrder>("Order", orderSchema);
+const Order = mongoose.model<IOrder>('Order', orderSchema);
 
 export default Order;

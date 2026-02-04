@@ -1,47 +1,47 @@
-import jwtService from "./jwt.service.ts";
-import authService from "./auth.service.ts";
+import jwtService from './jwt.service.ts';
+import authService from './auth.service.ts';
 
-import type { Request, Response } from "express";
+import type { Request, Response } from 'express';
 
 // import utils
-import sendEmail from "../../utils/mail.ts";
-import generateRandomCode from "../../utils/generateRandomCode.ts";
+import sendEmail from '../../utils/mail.ts';
 
 class AuthController {
-  constructor() {}
-
   async register(req: Request, res: Response): Promise<Response | void> {
     try {
-      const { username, email, password } = req.body;
+      const username: string = req.body.username;
+      const email: string = req.body.email;
+      const password: string = req.body.password;
       if (!username || !email || !password) {
         return res.status(400).json({
           success: false,
-          message: "Username, email, and password are required",
+          message: 'Username, email, and password are required',
         });
       }
 
-      const createdUser = authService.register(username, email, password);
+      const createdUser = await authService.register(username, email, password);
 
       res.status(201).json({
         success: true,
-        message: "User registered successfully",
+        message: 'User registered successfully',
         data: { createdUser },
       });
     } catch (error) {
       console.error(error);
       res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 
   async login(req: Request, res: Response): Promise<Response | void> {
     try {
-      const { email, password } = req.body;
+      const email: string = req.body.email;
+      const password: string = req.body.password;
       if (!email || !password) {
         return res
           .status(400)
-          .json({ success: false, message: "Email and password are required" });
+          .json({ success: false, message: 'Email and password are required' });
       }
 
       const user = await authService.login(email, password);
@@ -59,98 +59,103 @@ class AuthController {
       });
 
       // Send tokens in response
-      res.cookie("refreshToken", refreshToken, {
+      res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NODE_ENV === 'production',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
-      res.cookie("accessToken", accessToken, {
+      res.cookie('accessToken', accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NODE_ENV === 'production',
         maxAge: 15 * 60 * 1000, // 15 minutes
       });
 
-      res.status(200).json({ success: true, message: "Login successful" });
+      res.status(200).json({ success: true, message: 'Login successful' });
     } catch (error) {
       console.error(error);
       res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 
-  async logout(req: Request, res: Response): Promise<Response | void> {
+  logout(req: Request, res: Response): Response {
     try {
-      res.clearCookie("accessToken");
-      res.clearCookie("refreshToken");
-      res
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      return res
         .status(200)
-        .json({ success: true, message: "Logged out successfully" });
+        .json({ success: true, message: 'Logged out successfully' });
     } catch (error) {
       console.error(error);
-      res
+      return res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 
   async forgotPassword(req: Request, res: Response): Promise<Response | void> {
     try {
-      const email = req.body.email;
+      const email: string = req.body.email;
       const user = await authService.findUserByEmail(email);
       if (!user) {
         return res
           .status(404)
-          .json({ success: false, message: "User not found" });
+          .json({ success: false, message: 'User not found' });
       }
       const reciever = user.email;
-      const subject = "Password Reset Request";
-      const htmlContent = `<p>Click <a href="https://yourapp.com/auth/reset-password?email=${encodeURIComponent(
+      const subject = 'Password Reset Request';
+      const htmlContent = `<p>Click <a href="https://shop.com/auth/reset-password?email=${encodeURIComponent(
         reciever,
       )}">here</a> to reset your password.</p>`;
       const result = await sendEmail(reciever, subject, htmlContent);
       req.session!.email = reciever;
       res.status(200).json({
         success: true,
-        message: "Password reset email sent",
+        message: 'Password reset email sent',
         data: { result },
       });
     } catch (error) {
       console.error(error);
       res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 
   async resetPassword(req: Request, res: Response) {
     try {
       const email = req.session!.email;
-      const { newPassword } = req.body;
+      const newPassword: string = req.body.newPassword;
       if (!email || !newPassword) {
         {
           return res.status(400).json({
             success: false,
             message:
-              "Email and new password and verification code are required",
+              'Email and new password and verification code are required',
           });
         }
       }
       const user = await authService.findUserByEmail(email);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: 'Usre not found' });
+      }
       const updatedUser = await authService.resetPassword(
         newPassword,
         user._id.toString(),
       );
       res.status(200).json({
         success: true,
-        message: "Password reset successfully",
+        message: 'Password reset successfully',
         data: { updatedUser },
       });
     } catch (error) {
       console.error(error);
       res
         .status(500)
-        .json({ success: false, message: "Internal server error" });
+        .json({ success: false, message: 'Internal server error' });
     }
   }
 }

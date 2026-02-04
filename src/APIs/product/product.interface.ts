@@ -1,4 +1,4 @@
-import { Document, Schema } from "mongoose";
+import type { Document, Schema } from 'mongoose';
 
 export interface IProduct extends Document {
   title: string;
@@ -15,20 +15,19 @@ export interface IProduct extends Document {
 }
 
 // define upload file types
-export type ProductFiles = {
-  image: Express.Multer.File[];
-  gallery: Express.Multer.File[];
-};
-
+export interface ProductFiles {
+  image?: Express.Multer.File[];
+  gallery?: Express.Multer.File[];
+}
 
 export type ProductCreationData = Pick<
   IProduct,
-  "title" | "description" | "image" | "gallery" | "price" | "category"
+  'title' | 'description' | 'image' | 'gallery' | 'price' | 'category'
 >;
 
 export type ProductUpdateData = Partial<
   Pick<
     IProduct,
-    "title" | "description" | "image" | "gallery" | "price" | "category"
+    'title' | 'description' | 'image' | 'gallery' | 'price' | 'category'
   >
 >;

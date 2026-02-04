@@ -1,23 +1,25 @@
-import jwtService from "../APIs/authentication/jwt.service";
+import jwtService from '../APIs/authentication/jwt.service';
+import type { Request, Response, NextFunction } from 'express';
 
 const authorizeRole = (allowedRoles: string[]) => {
-  return (req: any, res: any, next: any) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
-      const refreshToken = req.cookies.refreshToken;
+      const refreshToken: string = req.cookies.refreshToken;
       if (!refreshToken) {
         return res
           .status(401)
-          .json({ success: false, message: "No token provided" });
+          .json({ success: false, message: 'No token provided' });
       }
       const decoded = jwtService.validateRefreshToken(refreshToken);
       if (!allowedRoles.includes(decoded.role)) {
         return res
           .status(403)
-          .json({ success: false, message: "Forbidden: Access denied" });
+          .json({ success: false, message: 'Forbidden: Access denied' });
       }
       next();
     } catch (error) {
-      return res.status(401).json({ success: false, message: "Invalid token" });
+      console.log(error);
+      return res.status(401).json({ success: false, message: 'Invalid token' });
     }
   };
 };
