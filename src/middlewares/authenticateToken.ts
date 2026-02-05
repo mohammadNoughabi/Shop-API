@@ -1,44 +1,32 @@
 import jwtService from '../APIs/authentication/jwt.service.ts';
-
 import type { Request, Response, NextFunction } from 'express';
 
 const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
   try {
-    const refreshToken: string = req.cookies['refreshToken'];
+    const accessToken = req.cookies['accessToken'] as string;
 
-    if (!refreshToken) {
+    if (!accessToken) {
       return res.status(401).json({
         success: false,
-        message: 'Refresh token required',
+        message: 'Access token required',
       });
     }
 
-    const { newAccessToken, newRefreshToken } =
-      jwtService.handleRefreshToken(refreshToken);
+    const decoded = jwtService.validateAccessToken(accessToken);
 
-    // Set new cookies
-    res.cookie('refreshToken', newRefreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    // ✅ attach user to request
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role,
+    };
 
-    res.cookie('accessToken', newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 15 * 60 * 1000, // 15 minutes
-    });
-
-    res.json({
-      success: true,
-      message: 'Tokens refreshed',
-    });
     next();
   } catch (error) {
     console.log(error);
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
-      message: 'Invalid refresh token',
+      message: 'Invalid or expired access token',
     });
   }
 };

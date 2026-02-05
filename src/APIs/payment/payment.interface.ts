@@ -1,14 +1,32 @@
-import type { Document, Schema } from 'mongoose';
-
+import type { Document, Types } from 'mongoose';
 import type { PaymentStatus } from './payment.constants.ts';
 
-export interface IPayment extends Document {
-  orderId: Schema.Types.ObjectId;
-  transactionId?: string;
-  amount: number;
-  currency: string;
-  status: PaymentStatus;
-  paidAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+interface MetaData {
+  email?: string;
+  phone?: string;
+  orderId?: string;
 }
+
+// Payment Entity Interface
+export interface IPayment extends Document {
+  amount: number;
+  description: string;
+  status: PaymentStatus;
+  authority?: string;
+  refId?: string;
+  userId?: Types.ObjectId;
+  orderId?: Types.ObjectId;
+  metadata?: MetaData;
+  cardHash?: string;
+  cardPan?: string;
+  initializedAt?: Date;
+  verifiedAt?: Date;
+  cancelledAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export type PaymentCreationData = Pick<
+  IPayment,
+  'amount' | 'description' | 'userId' | 'orderId' | 'metadata'
+>;

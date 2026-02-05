@@ -3,6 +3,14 @@ import User from './user.model.ts';
 import type { IUser } from './user.interface.ts';
 
 class UserService {
+  async findUserById(id: string): Promise<IUser | null> {
+    const user = await User.findOne({ _id: id, isDeleted: false });
+    if (!user) {
+      return null;
+    }
+    return user;
+  }
+
   async getUserProfile(id: string): Promise<IUser | null> {
     const existingUser = await User.findOne({ _id: id, isDeleted: false });
     if (!existingUser) {

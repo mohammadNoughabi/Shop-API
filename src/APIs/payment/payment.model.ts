@@ -5,38 +5,62 @@ import { PAYMENT_STATUSES } from './payment.constants.ts';
 
 const paymentSchema = new mongoose.Schema<IPayment>(
   {
-    orderId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Order',
-      required: true,
-    },
-    transactionId: {
-      type: String,
-      required: false,
-    },
     amount: {
       type: Number,
       required: true,
+      min: 1000, // Minimum amount (in Rials)
     },
-    currency: {
+    description: {
       type: String,
       required: true,
+      trim: true,
+      default: 'Buy from shop',
     },
     status: {
       type: String,
       enum: PAYMENT_STATUSES,
       default: 'pending',
     },
-    paidAt: {
-      type: Date,
-      required: false,
-      default: null,
+    authority: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
+    refId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
+    },
+    orderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Order',
+      index: true,
+    },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+    cardHash: String,
+    cardPan: String,
+    initializedAt: Date,
+    verifiedAt: Date,
+    cancelledAt: Date,
   },
   {
     timestamps: true,
+    versionKey: false,
   },
 );
+
+// Indexes for better query performance
+paymentSchema.index({ status: 1, createdAt: -1 });
+paymentSchema.index({ userId: 1, status: 1 });
+paymentSchema.index({ orderId: 1 }, { unique: true, sparse: true });
 
 const Payment = mongoose.model<IPayment>('Payment', paymentSchema);
 
