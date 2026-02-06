@@ -1,21 +1,19 @@
-export interface LoginData {
+export interface LoginDto {
+  email: string;
+  password: string;
+}
+
+export interface RegisterDto {
   username: string;
   email: string;
   password: string;
 }
 
-export interface RegisterData {
-  username: string;
-  email: string;
-  password: string;
-  profilePic?: string;
-}
-
-export interface forgotPasswordData {
+export interface forgotPasswordDto {
   email: string;
 }
 
-export interface resetPasswordData {
-  verificationCode: string;
+export interface resetPasswordDto {
+  userId: string;
   newPassword: string;
 }

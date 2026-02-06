@@ -1,4 +1,4 @@
-import type { IPayment, PaymentCreationData } from './payment.interface.ts';
+import type { IPayment, CreatePaymentDto } from './payment.interface.ts';
 
 import Payment from './payment.model.ts';
 
@@ -19,7 +19,7 @@ class PaymentService {
   }
 
   async createPayment(
-    creationData: PaymentCreationData,
+    creationData: CreatePaymentDto,
   ): Promise<IPayment | null> {
     const { amount, description, userId, orderId, metadata } = creationData;
     const payment = await Payment.create({

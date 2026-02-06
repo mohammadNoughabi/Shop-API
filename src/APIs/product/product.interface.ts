@@ -1,4 +1,6 @@
-import type { Document, Schema } from 'mongoose';
+import type { Document, Types } from 'mongoose';
+
+import type { CreateProductInput, UpdateProductInput } from './product.schema';
 
 export interface IProduct extends Document {
   title: string;
@@ -7,7 +9,7 @@ export interface IProduct extends Document {
   gallery: string[];
   price: string;
   rate: number;
-  category: Schema.Types.ObjectId;
+  category: Types.ObjectId;
   isDeleted: boolean;
   deletedAt?: Date;
   createdAt: Date;
@@ -20,14 +22,12 @@ export interface ProductFiles {
   gallery?: Express.Multer.File[];
 }
 
-export type ProductCreationData = Pick<
-  IProduct,
-  'title' | 'description' | 'image' | 'gallery' | 'price' | 'category'
->;
+export type CreateProductData = CreateProductInput & {
+  image: string;
+  gallery: string[];
+};
 
-export type ProductUpdateData = Partial<
-  Pick<
-    IProduct,
-    'title' | 'description' | 'image' | 'gallery' | 'price' | 'category'
-  >
->;
+export type UpdateProductData = UpdateProductInput & {
+  image?: string;
+  gallery?: string[];
+};

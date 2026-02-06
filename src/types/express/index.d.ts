@@ -9,5 +9,11 @@ declare global {
         role: string;
       };
     }
+
+    interface Response {
+      success: boolean;
+      message: string;
+      data?: object;
+    }
   }
 }

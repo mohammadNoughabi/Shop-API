@@ -26,7 +26,7 @@ export interface IPayment extends Document {
   updatedAt?: Date;
 }
 
-export type PaymentCreationData = Pick<
+export type CreatePaymentDto = Pick<
   IPayment,
   'amount' | 'description' | 'userId' | 'orderId' | 'metadata'
 >;

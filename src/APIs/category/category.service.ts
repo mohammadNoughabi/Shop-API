@@ -2,10 +2,10 @@
 import Category from './category.model.ts';
 
 // import types
+import type { ICategory } from './category.interface.ts';
 import type {
-  ICategory,
-  CategoryCreationData,
-  CategoryUpdateData,
+  CreateCategoryData,
+  UpdateCategoryData,
 } from './category.interface.ts';
 
 class CategoryService {
@@ -20,7 +20,7 @@ class CategoryService {
   }
 
   async createCategory(
-    creationData: CategoryCreationData,
+    creationData: CreateCategoryData,
   ): Promise<ICategory | null> {
     const existingCategory = await Category.findOne({
       title: creationData.title,
@@ -35,7 +35,7 @@ class CategoryService {
 
   async updateCategory(
     id: string,
-    updateData: CategoryUpdateData,
+    updateData: UpdateCategoryData,
   ): Promise<ICategory | null> {
     const existingCategory: ICategory | null = await Category.findOne({
       _id: id,

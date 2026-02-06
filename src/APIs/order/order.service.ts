@@ -5,11 +5,7 @@ import { generateTrackingNumber } from '../../utils/generateTrackingNumber.ts';
 import { getErrorMessage } from '../../utils/getErrorMessage.ts';
 
 // import types
-import type {
-  IOrder,
-  OrderCreationData,
-  OrderUpdateData,
-} from './order.interface';
+import type { IOrder, CreateOrderDto, UpdateOrderDto } from './order.interface';
 
 class OrderService {
   async getAllOrders(): Promise<IOrder[]> {
@@ -43,7 +39,7 @@ class OrderService {
     return orders;
   }
 
-  async createOrder(data: OrderCreationData): Promise<IOrder | null> {
+  async createOrder(data: CreateOrderDto): Promise<IOrder | null> {
     const MAX_RETRIES = 5;
 
     /* eslint-disable no-await-in-loop */
@@ -62,7 +58,7 @@ class OrderService {
     return null;
   }
 
-  async updateOrder(id: string, updateData: OrderUpdateData) {
+  async updateOrder(id: string, updateData: UpdateOrderDto) {
     const existingOrder: IOrder | null = await Order.findById(id);
     if (!existingOrder) {
       return null;

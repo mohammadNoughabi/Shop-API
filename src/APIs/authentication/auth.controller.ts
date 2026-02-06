@@ -19,7 +19,11 @@ class AuthController {
         });
       }
 
-      const createdUser = await authService.register(username, email, password);
+      const createdUser = await authService.register({
+        username,
+        email,
+        password,
+      });
 
       res.status(201).json({
         success: true,
@@ -44,7 +48,7 @@ class AuthController {
           .json({ success: false, message: 'Email and password are required' });
       }
 
-      const user = await authService.login(email, password);
+      const user = await authService.login({ email, password });
 
       // Generate JWT tokens
       const accessToken = jwtService.generateAccessToken({
@@ -142,10 +146,10 @@ class AuthController {
           .status(404)
           .json({ success: false, message: 'Usre not found' });
       }
-      const updatedUser = await authService.resetPassword(
+      const updatedUser = await authService.resetPassword({
         newPassword,
-        user._id.toString(),
-      );
+        userId: user._id.toString(),
+      });
       res.status(200).json({
         success: true,
         message: 'Password reset successfully',

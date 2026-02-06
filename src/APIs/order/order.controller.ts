@@ -1,6 +1,6 @@
 import { ORDER_STATUSES, ORDER_STATUS_FLOW } from './order.constants.ts';
 import type { OrderStatus } from './order.constants.ts';
-import type { OrderCreationData, OrderUpdateData } from './order.interface.ts';
+import type { CreateOrderDto, UpdateOrderDto } from './order.interface.ts';
 import type { Request, Response } from 'express';
 
 import orderService from './order.service.ts';
@@ -74,7 +74,7 @@ class OrderController {
 
   async create(req: Request, res: Response): Promise<Response> {
     try {
-      const data: OrderCreationData = req.body;
+      const data: CreateOrderDto = req.body;
 
       if (!data.address || !data.postalCode || !data.phone) {
         return res.status(400).json({
@@ -107,7 +107,7 @@ class OrderController {
   async update(req: Request, res: Response): Promise<Response> {
     try {
       const id = req.params.id as string;
-      const updateData: OrderUpdateData = req.body;
+      const updateData: UpdateOrderDto = req.body;
       if (Object.keys(updateData).length === 0) {
         return res.status(400).json({
           success: false,

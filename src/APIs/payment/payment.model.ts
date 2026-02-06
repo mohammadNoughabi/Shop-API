@@ -57,11 +57,6 @@ const paymentSchema = new mongoose.Schema<IPayment>(
   },
 );
 
-// Indexes for better query performance
-paymentSchema.index({ status: 1, createdAt: -1 });
-paymentSchema.index({ userId: 1, status: 1 });
-paymentSchema.index({ orderId: 1 }, { unique: true, sparse: true });
-
 const Payment = mongoose.model<IPayment>('Payment', paymentSchema);
 
 export default Payment;

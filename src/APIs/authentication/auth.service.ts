@@ -3,19 +3,24 @@ import User from '../user/user.model.ts';
 
 // import types
 import type { IUser } from '../user/user.interface.ts';
+import type {
+  LoginDto,
+  RegisterDto,
+  forgotPasswordDto,
+  resetPasswordDto,
+} from './auth.interface.ts';
 
 // import uitls
 import sendEmail from '../../utils/mail.ts';
 import generateRandomCode from '../../utils/generateRandomCode.ts';
 
 class AuthService {
-  async register(
-    username: string,
-    email: string,
-    password: string,
-    profilePic?: string,
-  ): Promise<IUser> {
-    const existingUser = await User.findOne({ email, isDeleted: false });
+  async register(data: RegisterDto): Promise<IUser> {
+    const { username, email, password } = data;
+    const existingUser = await User.findOne({
+      email,
+      isDeleted: false,
+    });
 
     if (existingUser) {
       throw new Error('User already exists with this email');
@@ -24,13 +29,13 @@ class AuthService {
       username,
       email,
       password,
-      profilePic,
     });
     await createdUser.save();
     return createdUser;
   }
 
-  async login(email: string, password: string) {
+  async login(data: LoginDto) {
+    const { email, password } = data;
     const user = await User.findOne({ email, isDeleted: false });
 
     if (!user) {
@@ -53,10 +58,10 @@ class AuthService {
     return user;
   }
 
-  forgotPassword(email: string) {
+  forgotPassword(data: forgotPasswordDto) {
     const code = generateRandomCode();
     const result = sendEmail(
-      email,
+      data.email,
       'Welcome to our Shop',
       ` <div>
             <h2>Verification Email</h2>
@@ -66,10 +71,8 @@ class AuthService {
     return result;
   }
 
-  async resetPassword(
-    newPassword: string,
-    userId: string,
-  ): Promise<IUser | null> {
+  async resetPassword(data: resetPasswordDto): Promise<IUser | null> {
+    const { userId, newPassword } = data;
     const user = await User.findById(userId);
     if (!user) {
       throw new Error('User not found');

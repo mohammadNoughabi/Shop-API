@@ -24,12 +24,12 @@ export interface IOrder extends Document {
   updatedAt: Date;
 }
 
-export type OrderCreationData = Pick<
+export type CreateOrderDto = Pick<
   IOrder,
   'items' | 'total' | 'address' | 'postalCode' | 'phone' | 'user'
 >;
 
-export type OrderUpdateData = Partial<
+export type UpdateOrderDto = Partial<
   Pick<
     IOrder,
     'items' | 'total' | 'address' | 'postalCode' | 'phone' | 'trackingNumber'

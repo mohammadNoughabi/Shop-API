@@ -1,35 +1,54 @@
-import express from "express";
+import express from 'express';
 
-// import middlewares
-import upload from "../../middlewares/upload.ts";
-import authenticateToken from "../../middlewares/authenticateToken.ts";
-import authorizeRole from "../../middlewares/authorizeRole.ts";
+// middlewares
+import upload from '../../middlewares/upload.ts';
+import authenticateToken from '../../middlewares/authenticateToken.ts';
+import authorizeRole from '../../middlewares/authorizeRole.ts';
+import validate from '../../middlewares/zod.validation.ts';
 
-// import controller
-import categoryController from "./category.controller.ts";
+// zod schemas
+import {
+  createCategorySchema,
+  updateCategorySchema,
+  categoryIdParamSchema,
+} from './category.schema.ts';
+
+// controller
+import categoryController from './category.controller.ts';
 
 const categoryRouter = express.Router();
 
-categoryRouter.get("/", categoryController.getAll);
-categoryRouter.get("/:id", categoryController.getById);
+categoryRouter.get('/', categoryController.getAll);
+
+categoryRouter.get(
+  '/:id',
+  validate(categoryIdParamSchema),
+  categoryController.getById,
+);
+
 categoryRouter.post(
-  "/",
+  '/',
   authenticateToken,
-  authorizeRole(["admin"]),
-  upload.single("thumbnail"),
+  authorizeRole(['admin']),
+  validate(createCategorySchema),
+  upload.single('thumbnail'),
   categoryController.create,
 );
+
 categoryRouter.put(
-  "/:id",
+  '/:id',
   authenticateToken,
-  authorizeRole(["admin"]),
-  upload.single("thumbnail"),
+  authorizeRole(['admin']),
+  validate(updateCategorySchema),
+  upload.single('thumbnail'),
   categoryController.update,
 );
+
 categoryRouter.delete(
-  "/:id",
+  '/:id',
   authenticateToken,
-  authorizeRole(["admin"]),
+  authorizeRole(['admin']),
+  validate(categoryIdParamSchema),
   categoryController.delete,
 );
 

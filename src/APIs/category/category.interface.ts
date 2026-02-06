@@ -1,5 +1,10 @@
 import type { Document } from 'mongoose';
 
+import type {
+  CreateCategoryInput,
+  UpdateCategoryInput,
+} from './category.schema.ts';
+
 export interface ICategory extends Document {
   title: string;
   thumbnail: string;
@@ -10,11 +15,10 @@ export interface ICategory extends Document {
   updatedAt: Date;
 }
 
-export type CategoryCreationData = Pick<
-  ICategory,
-  'title' | 'description' | 'thumbnail'
->;
+export type CreateCategoryData = CreateCategoryInput & {
+  thumbnail: string;
+};
 
-export type CategoryUpdateData = Partial<
-  Pick<ICategory, 'title' | 'description' | 'thumbnail'>
->;
+export type UpdateCategoryData = UpdateCategoryInput & {
+  thumbnail?: string;
+};
