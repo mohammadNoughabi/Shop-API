@@ -1,14 +1,26 @@
-import type { Document, Schema } from 'mongoose';
+import type { Document, Types } from 'mongoose';
 
 export interface ICartItem {
-  product: Schema.Types.ObjectId;
+  productId: Types.ObjectId;
+  price: number;
   quantity: number;
 }
 
 export interface ICart extends Document {
+  userId: Types.ObjectId;
   items: ICartItem[];
-  total: number;
-  user: Schema.Types.ObjectId;
+  totalAmount: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+// Client → server after zod validation
+export interface AddCartItemData {
+  productId: string;
+  quantity: number;
+}
+
+export interface RemoveCartItemData {
+  productId: string;
+  quantity?: number; // optional – if missing or 0 → remove completely
 }

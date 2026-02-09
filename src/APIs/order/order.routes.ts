@@ -1,15 +1,27 @@
-import express from "express";
+import { Router } from 'express';
+import orderController from './order.controller.ts';
+import authenticateToken from '../../middlewares/authenticateToken.ts';
+import authorizeRole from '../../middlewares/authorizeRole.ts';
+import validate from '../../middlewares/zod.validation.ts';
+import {
+  createOrderSchema,
+  updateOrderStatusSchema,
+  orderIdParamSchema,
+} from './order.schema.ts';
 
-import orderController from "./order.controller.ts";
+const router = Router();
 
-const orderRouter = express.Router();
+router.use(authenticateToken);
 
-orderRouter.get("/", orderController.getAll);
-orderRouter.get("/get-by-tracking-number", orderController.getByTrackingNumber);
-orderRouter.get("/get-by-status" , orderController.getByStatus)
-orderRouter.post("/", orderController.create);
-orderRouter.put("/:id", orderController.update);
-orderRouter.put("/update-status/:id" , orderController.updateStatus)
-orderRouter.delete("/:id", orderController.delete);
+router.get('/', orderController.getMyOrders);
+router.get('/:id', validate(orderIdParamSchema), orderController.getById);
+router.post('/', validate(createOrderSchema), orderController.create);
+router.patch(
+  '/:id/status',
+  authorizeRole(['admin']),
+  validate(updateOrderStatusSchema),
+  orderController.updateStatus,
+);
+router.delete('/:id', validate(orderIdParamSchema), orderController.softDelete);
 
-export default orderRouter;
+export default router;

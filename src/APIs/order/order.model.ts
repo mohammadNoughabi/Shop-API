@@ -1,62 +1,29 @@
 import mongoose from 'mongoose';
-
-// import types
-import type { OrderItem, IOrder } from './order.interface.ts';
-
-// import consts
+import type { IOrder } from './order.interface.ts';
 import { ORDER_STATUSES } from './order.constants.ts';
 
-const orderItemSchema = new mongoose.Schema<OrderItem>(
+const orderItemSchema = new mongoose.Schema(
   {
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Product',
       required: true,
     },
-    quantity: {
-      type: Number,
-      required: true,
-      min: 1,
-    },
-    price: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
+    quantity: { type: Number, required: true, min: 1 },
+    price: { type: Number, required: true, min: 0 },
   },
-  {
-    _id: false, // optional: prevents extra _id for each item
-  },
+  { _id: false },
 );
 
 const orderSchema = new mongoose.Schema<IOrder>(
   {
-    items: {
-      type: [orderItemSchema],
-      required: [true, 'There is no item in your order'],
-      default: [],
-    },
-    total: {
-      type: Number,
-      min: [0, 'Total must be more than 0'],
-    },
-    address: {
-      type: String,
-      required: [true, 'Address can not be empty'],
-      minlength: [10, 'Address must be at least 10 characters'],
-    },
-    postalCode: {
-      type: String,
-      required: [true, 'Postal Code can not be empty'],
-      minlength: [10, 'Postal Code must be at least 10 digits'],
-    },
-    phone: {
-      type: String,
-      required: [true, 'Phone can not be empty'],
-      minlength: 10,
-    },
+    items: { type: [orderItemSchema], required: true },
+    total: { type: Number, required: true, min: 0 },
+    address: { type: String, required: true },
+    postalCode: { type: String, required: true },
+    phone: { type: String, required: true },
     trackingNumber: {
-      type: Number,
+      type: String,
       required: true,
       unique: true,
     },
@@ -70,20 +37,10 @@ const orderSchema = new mongoose.Schema<IOrder>(
       ref: 'User',
       required: true,
     },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
-    deletedAt: {
-      type: Date,
-      default: null,
-    },
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: { type: Date, default: null },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
 
-const Order = mongoose.model<IOrder>('Order', orderSchema);
-
-export default Order;
+export default mongoose.model<IOrder>('Order', orderSchema);

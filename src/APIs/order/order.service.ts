@@ -1,103 +1,114 @@
+import mongoose from 'mongoose';
 import Order from './order.model.ts';
-
-// import utils
+import Cart from '../cart/cart.model.ts'; // ← important
 import { generateTrackingNumber } from '../../utils/generateTrackingNumber.ts';
-import { getErrorMessage } from '../../utils/getErrorMessage.ts';
-
-// import types
-import type { IOrder, CreateOrderDto, UpdateOrderDto } from './order.interface';
+import { ORDER_STATUS_FLOW } from './order.constants.ts';
+import type { OrderStatus } from './order.constants.ts';
+import type { IOrder, CreateOrderInput } from './order.interface.ts';
 
 class OrderService {
-  async getAllOrders(): Promise<IOrder[]> {
-    const orders: IOrder[] = await Order.find({ isDeleted: false });
-    return orders;
-  }
-
-  async getOrderById(id: string): Promise<IOrder | null> {
-    const order = await Order.findOne({ _id: id, isDeleted: false });
-    if (!order) {
-      return null;
-    }
-    return order;
-  }
-
-  async getOrderByTrackingNumber(
-    trackingNumber: number,
+  async createOrderFromCart(
+    userId: string,
+    data: CreateOrderInput,
   ): Promise<IOrder | null> {
-    const order: IOrder | null = await Order.findOne({
-      trackingNumber,
-      isDeleted: false,
-    });
-    if (!order) {
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    // 1. Get user's cart
+    const cart = await Cart.findOne({ userId: userObjectId });
+    if (!cart || cart.items.length === 0) {
       return null;
     }
+
+    // 2. Generate unique tracking number
+    let trackingNumber = String(generateTrackingNumber(12));
+    const existingOrder = await Order.findOne({ trackingNumber });
+    while (existingOrder) {
+      trackingNumber = String(generateTrackingNumber(12));
+    }
+
+    // 3. Create order from cart snapshot
+    const orderItems = cart.items.map((item) => ({
+      product: item.productId,
+      quantity: item.quantity,
+      price: item.price,
+    }));
+
+    const total = orderItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
+
+    const order = await Order.create({
+      user: userObjectId,
+      items: orderItems,
+      total,
+      address: data.address,
+      postalCode: data.postalCode,
+      phone: data.phone,
+      trackingNumber,
+      status: 'pending',
+    });
+
     return order;
   }
 
-  async getOrdersByStatus(status: string): Promise<IOrder[]> {
-    const orders: IOrder[] = await Order.find({ status, isDeleted: false });
-    return orders;
+  async getMyOrders(userId: string): Promise<IOrder[]> {
+    const order = await Order.find({
+      user: new mongoose.Types.ObjectId(userId),
+      isDeleted: false,
+    })
+      .populate('items.product', 'name price image') // adjust fields
+      .sort({ createdAt: -1 });
+    return order;
   }
 
-  async createOrder(data: CreateOrderDto): Promise<IOrder | null> {
-    const MAX_RETRIES = 5;
+  async getOrderById(orderId: string, userId: string): Promise<IOrder | null> {
+    const order = await Order.findOne({
+      _id: orderId,
+      user: new mongoose.Types.ObjectId(userId),
+      isDeleted: false,
+    }).populate('items.product');
+    return order;
+  }
 
-    /* eslint-disable no-await-in-loop */
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-      try {
-        const order = await Order.create({
-          ...data,
-          trackingNumber: generateTrackingNumber(10),
-        });
+  private isValidTransition(from: OrderStatus, to: OrderStatus): boolean {
+    return ORDER_STATUS_FLOW[from].includes(to);
+  }
 
-        return order;
-      } catch (err: unknown) {
-        console.log(getErrorMessage(err));
-      }
+  async updateStatus(
+    orderId: string,
+    newStatus: OrderStatus,
+  ): Promise<IOrder | null> {
+    const order = await Order.findOne({ _id: orderId, isDeleted: false });
+    if (!order) return null;
+
+    if (!this.isValidTransition(order.status, newStatus)) {
+      throw new Error(
+        `Invalid status transition: ${order.status} → ${newStatus}`,
+      );
     }
-    return null;
+
+    order.status = newStatus;
+    await order.save();
+    return order;
   }
 
-  async updateOrder(id: string, updateData: UpdateOrderDto) {
-    const existingOrder: IOrder | null = await Order.findById(id);
-    if (!existingOrder) {
-      return null;
-    }
-    const updatedOrder: IOrder | null = await Order.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true },
-    );
-    return updatedOrder;
-  }
-
-  async updateOrderStatus(id: string, newStatus: string) {
-    const existingOrder: IOrder | null = await Order.findOne({
-      _id: id,
+  async softDelete(orderId: string, userId: string): Promise<IOrder | null> {
+    const order = await Order.findOne({
+      _id: orderId,
+      user: new mongoose.Types.ObjectId(userId),
       isDeleted: false,
     });
-    if (!existingOrder) {
-      return null;
-    }
-    const updatedOrder: IOrder | null = await Order.findByIdAndUpdate(
-      id,
-      { status: newStatus },
-      { new: true },
-    );
-    return updatedOrder;
-  }
 
-  async deleteOrder(id: string) {
-    const existingOrder = await Order.findOne({ _id: id, isDeleted: false });
-    if (!existingOrder) {
-      return null;
+    if (!order) return null;
+    if (order.status !== 'pending') {
+      throw new Error('Only pending orders can be canceled');
     }
-    const deletedOrder: IOrder | null = await Order.findByIdAndUpdate(
-      id,
-      { isDeleted: true, deletedAt: new Date() },
-      { new: true },
-    );
-    return deletedOrder;
+
+    order.isDeleted = true;
+    order.deletedAt = new Date();
+    await order.save();
+    return order;
   }
 }
 

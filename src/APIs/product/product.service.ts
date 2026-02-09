@@ -79,6 +79,22 @@ class ProductService {
     );
     return deletedProduct;
   }
+
+  async updateInventory(id: string, newInventory: number) {
+    const existingProduct = await Product.findOne({
+      _id: id,
+      isDeleted: false,
+    });
+    if (!existingProduct) {
+      return null;
+    }
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      { inventory: newInventory },
+      { new: true },
+    );
+    return updatedProduct;
+  }
 }
 
 export default new ProductService();

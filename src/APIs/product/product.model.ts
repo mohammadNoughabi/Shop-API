@@ -1,21 +1,21 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-import type { IProduct } from "./product.interface.ts";
+import type { IProduct } from './product.interface.ts';
 
 const productSchema = new mongoose.Schema<IProduct>(
   {
     title: {
       type: String,
-      required: [true, "Title is required"],
-      unique: [true, "Product with this name already exists"],
+      required: [true, 'Title is required'],
+      unique: [true, 'Product with this name already exists'],
     },
     description: {
       type: String,
-      required: [true, "Description is required"],
+      required: [true, 'Description is required'],
     },
     image: {
       type: String,
-      required: [true, "Main image is required"],
+      required: [true, 'Main image is required'],
     },
     gallery: {
       type: [String],
@@ -23,7 +23,12 @@ const productSchema = new mongoose.Schema<IProduct>(
     },
     price: {
       type: String,
-      required: [true, "Price is required"],
+      required: [true, 'Price is required'],
+    },
+    inventory: {
+      type: Number,
+      required: true,
+      default: 0,
     },
     rate: {
       type: Number,
@@ -31,8 +36,8 @@ const productSchema = new mongoose.Schema<IProduct>(
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
-      required: [true, "Category is required"],
+      ref: 'Category',
+      required: [true, 'Category is required'],
     },
     isDeleted: {
       type: Boolean,
@@ -48,6 +53,6 @@ const productSchema = new mongoose.Schema<IProduct>(
   },
 );
 
-const Product = mongoose.model<IProduct>("Product", productSchema);
+const Product = mongoose.model<IProduct>('Product', productSchema);
 
 export default Product;

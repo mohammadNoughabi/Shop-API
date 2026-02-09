@@ -8,7 +8,7 @@ import rateLimit from 'express-rate-limit';
 import type { Application } from 'express';
 
 // import other modules
-import connectDb from './config/dbConnection.ts';
+import mongoConnection from './config/dbConnection.ts';
 import router from './router.ts';
 
 // initializing express app
@@ -37,7 +37,7 @@ app.use('/api', router);
 // main function to scheduling db connection before running app
 const main = async () => {
   try {
-    await connectDb();
+    await mongoConnection.connect();
     const port = process.env.PORT || 3000;
     app.listen(port, () => {
       console.log(`Listening on port ${port}`);

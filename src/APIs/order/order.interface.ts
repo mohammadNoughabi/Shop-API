@@ -1,37 +1,40 @@
-import type { Document, Schema } from 'mongoose';
-
-// import types
+import type { Document, Types } from 'mongoose';
 import type { OrderStatus } from './order.constants.ts';
 
-export interface OrderItem {
-  product: Schema.Types.ObjectId;
+export interface IOrderItem {
+  product: Types.ObjectId;
   quantity: number;
   price: number;
 }
 
 export interface IOrder extends Document {
-  items: OrderItem[];
+  items: IOrderItem[];
   total: number;
   address: string;
   postalCode: string;
   phone: string;
-  trackingNumber: number;
+  trackingNumber: string; // better as string
   status: OrderStatus;
-  user: Schema.Types.ObjectId;
+  user: Types.ObjectId;
   isDeleted: boolean;
-  deletedAt: Date;
+  deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export type CreateOrderDto = Pick<
-  IOrder,
-  'items' | 'total' | 'address' | 'postalCode' | 'phone' | 'user'
->;
+// ==================== Input Types (Client → Server) ====================
 
-export type UpdateOrderDto = Partial<
-  Pick<
-    IOrder,
-    'items' | 'total' | 'address' | 'postalCode' | 'phone' | 'trackingNumber'
-  >
->;
+export interface CreateOrderInput {
+  address: string;
+  postalCode: string;
+  phone: string;
+  // We do NOT accept items or total from client → taken from cart
+}
+
+export interface UpdateOrderStatusInput {
+  status: OrderStatus;
+}
+
+export interface OrderIdParam {
+  id: string;
+}
