@@ -1,5 +1,10 @@
 import type { Document, Types } from 'mongoose';
 import type { PaymentStatus } from './payment.constants.ts';
+import type {
+  CreatePaymentInput,
+  InitializePaymentInput,
+  VerifyPaymentInput,
+} from './payment.schema.ts';
 
 interface MetaData {
   email?: string;
@@ -26,7 +31,11 @@ export interface IPayment extends Document {
   updatedAt?: Date;
 }
 
-export type CreatePaymentDto = Pick<
-  IPayment,
-  'amount' | 'description' | 'userId' | 'orderId' | 'metadata'
->;
+export type CreatePaymentData = CreatePaymentInput & {
+  userId: Types.ObjectId;
+  orderId: Types.ObjectId;
+};
+
+export type InitializePaymentData = InitializePaymentInput;
+
+export type VerifyPaymentData = VerifyPaymentInput;

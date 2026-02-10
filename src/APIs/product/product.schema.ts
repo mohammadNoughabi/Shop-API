@@ -14,7 +14,7 @@ const description = z
 
 const price = z.string().trim().min(1, 'Price can not be empty');
 
-const inventory = z.number().int();
+const stock = z.number().int();
 
 const category = z.string().trim().min(1, 'Category can not be null');
 
@@ -27,7 +27,7 @@ export const createProductSchema = z.object({
     title,
     description,
     price,
-    inventory,
+    stock,
     category,
   }),
 });
@@ -44,7 +44,7 @@ export const updateProductSchema = z.object({
     title,
     description,
     price,
-    inventory,
+    stock,
     category,
   }),
 });

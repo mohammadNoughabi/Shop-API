@@ -1,8 +1,14 @@
-import type { IPayment, CreatePaymentDto } from './payment.interface.ts';
+import type {
+  IPayment,
+  CreatePaymentData,
+  InitializePaymentData,
+  VerifyPaymentData,
+} from './payment.interface.ts';
 
 import Payment from './payment.model.ts';
 
-import { zarinpalService } from './zarinpal.service.ts';
+import orderService from '../order/order.service.ts';
+import zarinpalService from './zarinpal.service.ts';
 
 class PaymentService {
   async getAllPayments(): Promise<IPayment[]> {
@@ -19,12 +25,20 @@ class PaymentService {
   }
 
   async createPayment(
-    creationData: CreatePaymentDto,
+    creationData: CreatePaymentData,
   ): Promise<IPayment | null> {
-    const { amount, description, userId, orderId, metadata } = creationData;
+    const { userId, orderId, metadata } = creationData;
+    const order = await orderService.getOrderById(
+      orderId.toString(),
+      userId.toString(),
+    );
+    if (!order) {
+      throw new Error('Order not found');
+    }
+    const amount = order.total;
     const payment = await Payment.create({
       amount,
-      description,
+      description: metadata.description || `Payment for order ${orderId}`,
       userId,
       orderId,
       metadata,
@@ -32,13 +46,10 @@ class PaymentService {
     return payment;
   }
 
-  async initializePayment(
-    paymentId: string,
-    callbackUrl: string,
-  ): Promise<{
+  async initializePayment(data: InitializePaymentData): Promise<{
     redirectUrl: string;
   } | null> {
-    const payment = await Payment.findById(paymentId);
+    const payment = await Payment.findById(data.paymentId);
     if (!payment) return null;
 
     if (payment.status !== 'pending') {
@@ -48,10 +59,10 @@ class PaymentService {
     const result = await zarinpalService.requestPayment({
       amount: payment.amount,
       description: payment.description,
-      callbackUrl,
+      callbackUrl: data.callbackUrl,
       metadata: {
         email: payment.metadata?.email,
-        mobile: payment.metadata?.phone,
+        phone: payment.metadata?.phone,
         orderId: payment.metadata?.orderId,
       },
     });
@@ -59,6 +70,10 @@ class PaymentService {
     if (!result) {
       payment.status = 'failed';
       await payment.save();
+      await orderService.cancelOrder(
+        payment.orderId!.toString(),
+        payment.userId!.toString(),
+      ); // Cancel the order if payment initialization fails
       return null;
     }
 
@@ -71,10 +86,8 @@ class PaymentService {
     return { redirectUrl: result.redirectUrl };
   }
 
-  async verifyPayment(
-    authority: string,
-    amount: number,
-  ): Promise<IPayment | null> {
+  async verifyPayment(data: VerifyPaymentData): Promise<IPayment | null> {
+    const { authority, amount } = data;
     const payment = await Payment.findOne({ authority });
     if (!payment) return null;
 
@@ -82,10 +95,17 @@ class PaymentService {
       return payment; // idempotency
     }
 
-    const result = await zarinpalService.verifyPayment(authority, amount);
+    const result = await zarinpalService.verifyPayment(
+      authority,
+      Number(amount),
+    );
     if (!result) {
       payment.status = 'failed';
       await payment.save();
+      await orderService.cancelOrder(
+        payment.orderId!.toString(),
+        payment.userId!.toString(),
+      ); // Cancel the order if payment verification fails
       return null;
     }
 

@@ -8,7 +8,7 @@ export interface IProduct extends Document {
   image: string;
   gallery: string[];
   price: string;
-  inventory: number;
+  stock: number;
   rate: number;
   category: Types.ObjectId;
   isDeleted: boolean;

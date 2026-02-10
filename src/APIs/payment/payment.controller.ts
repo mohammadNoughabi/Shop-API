@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import paymentService from './payment.service.ts';
 import userService from '../user/user.service.ts';
 import orderService from '../order/order.service.ts';
+import productService from '../product/product.service.ts';
 
 class PaymentController {
   async getAll(req: Request, res: Response): Promise<Response> {
@@ -45,19 +46,11 @@ class PaymentController {
 
   async create(req: Request, res: Response): Promise<Response> {
     try {
-      const { userId, orderId } = req.query;
-
-      if (typeof userId !== 'string' || typeof orderId !== 'string') {
-        return res.status(400).json({
-          success: false,
-          message: 'userId and orderId are required',
-        });
-      }
-
-      const description =
-        typeof req.body.description === 'string'
-          ? req.body.description
-          : 'Buy from shop';
+      const userId = req.user._id as string;
+      const orderId = req.query.orderId as string;
+      const description = req.body.description as string;
+      const email = req.body.email as string;
+      const phone = req.body.phone as string;
 
       const user = await userService.findUserById(userId);
       if (!user) {
@@ -67,7 +60,7 @@ class PaymentController {
         });
       }
 
-      const order = await orderService.getOrderById(orderId);
+      const order = await orderService.getOrderById(orderId, userId);
       if (!order) {
         return res.status(404).json({
           success: false,
@@ -85,14 +78,12 @@ class PaymentController {
       }
 
       const metadata = {
-        email: typeof req.body.email === 'string' ? req.body.email : undefined,
-        phone: typeof req.body.phone === 'string' ? req.body.phone : undefined,
-        orderId,
+        description,
+        email,
+        phone,
       };
 
       const createdPayment = await paymentService.createPayment({
-        amount,
-        description,
         userId: user._id,
         orderId: order._id,
         metadata,
@@ -120,26 +111,18 @@ class PaymentController {
       const paymentId = req.params.id as string;
 
       if (!paymentId) {
-        return res.status(400).json({
+        return res.status(404).json({
           success: false,
-          message: 'paymentId is required',
-        });
-      }
-
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({
-          success: false,
-          message: 'Unauthorized',
+          message: 'payment not found',
         });
       }
 
       const callbackUrl = `${process.env.BASE_URL}/payment/${paymentId}/verify`;
 
-      const result = await paymentService.initializePayment(
+      const result = await paymentService.initializePayment({
         paymentId,
         callbackUrl,
-      );
+      });
 
       if (!result) {
         return res.status(400).json({
@@ -162,21 +145,7 @@ class PaymentController {
   async verifyPayment(req: Request, res: Response): Promise<Response> {
     try {
       const paymentId = req.params.id as string;
-      const { Authority, Status } = req.query;
-
-      if (!paymentId) {
-        return res.status(400).json({
-          success: false,
-          message: 'paymentId is required',
-        });
-      }
-
-      if (typeof Authority !== 'string' || typeof Status !== 'string') {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid callback parameters',
-        });
-      }
+      const { authority, status } = req.query;
 
       const payment = await paymentService.getPaymentById(paymentId);
       if (!payment) {
@@ -186,7 +155,7 @@ class PaymentController {
         });
       }
 
-      if (Status !== 'OK') {
+      if (status !== 'OK') {
         await paymentService.cancelPayment(paymentId);
         return res.status(400).json({
           success: false,
@@ -194,17 +163,17 @@ class PaymentController {
         });
       }
 
-      if (payment.authority !== Authority) {
+      if (payment.authority !== authority || authority === undefined) {
         return res.status(400).json({
           success: false,
           message: 'Authority mismatch',
         });
       }
 
-      const verifiedPayment = await paymentService.verifyPayment(
-        Authority,
-        payment.amount,
-      );
+      const verifiedPayment = await paymentService.verifyPayment({
+        authority: authority.toString(),
+        amount: String(payment.amount),
+      });
 
       if (!verifiedPayment) {
         return res.status(400).json({
@@ -213,10 +182,31 @@ class PaymentController {
         });
       }
 
+      const order = await orderService.getOrderById(
+        payment.orderId!.toString(),
+        payment.userId!.toString(),
+      );
+
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: 'Associated order not found',
+        });
+      }
+
+      await orderService.updateStatus(order._id.toString(), 'paid');
+
+      const soldItems = order.items.map((item) => ({
+        productId: item.product._id.toString(),
+        quantity: item.quantity,
+      }));
+
+      await productService.bulkUpdateStock(soldItems);
+
       return res.status(200).json({
         success: true,
         message: 'Payment verified successfully',
-        data: { payment: verifiedPayment },
+        data: { payment: verifiedPayment, order, soldItems },
       });
     } catch (error) {
       console.error(error);

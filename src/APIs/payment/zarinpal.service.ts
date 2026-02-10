@@ -74,4 +74,4 @@ export class ZarinpalService implements IZarinpalService {
   }
 }
 
-export const zarinpalService = new ZarinpalService();
+export default new ZarinpalService();

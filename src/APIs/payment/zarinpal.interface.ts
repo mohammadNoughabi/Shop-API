@@ -12,7 +12,7 @@ export interface RequestPaymentDto {
   reffererId?: string;
   metadata: {
     email?: string;
-    mobile?: string;
+    phone?: string;
     orderId?: string;
   };
 }

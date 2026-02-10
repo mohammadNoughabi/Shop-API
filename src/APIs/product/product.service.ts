@@ -80,20 +80,17 @@ class ProductService {
     return deletedProduct;
   }
 
-  async updateInventory(id: string, newInventory: number) {
-    const existingProduct = await Product.findOne({
-      _id: id,
-      isDeleted: false,
-    });
-    if (!existingProduct) {
-      return null;
-    }
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      { inventory: newInventory },
-      { new: true },
-    );
-    return updatedProduct;
+  async bulkUpdateStock(
+    soldItems: { productId: string; quantity: number }[],
+  ): Promise<void> {
+    const bulkOps = soldItems.map((item) => ({
+      updateOne: {
+        filter: { _id: item.productId, isDeleted: false },
+        update: { $inc: { stock: -item.quantity } },
+      },
+    }));
+
+    await Product.bulkWrite(bulkOps);
   }
 }
 

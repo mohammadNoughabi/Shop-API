@@ -25,7 +25,7 @@ const productSchema = new mongoose.Schema<IProduct>(
       type: String,
       required: [true, 'Price is required'],
     },
-    inventory: {
+    stock: {
       type: Number,
       required: true,
       default: 0,

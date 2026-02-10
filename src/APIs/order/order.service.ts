@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import Order from './order.model.ts';
-import Cart from '../cart/cart.model.ts'; // ← important
+import Cart from '../cart/cart.model.ts';
 import { generateTrackingNumber } from '../../utils/generateTrackingNumber.ts';
 import { ORDER_STATUS_FLOW } from './order.constants.ts';
 import type { OrderStatus } from './order.constants.ts';
@@ -93,7 +93,7 @@ class OrderService {
     return order;
   }
 
-  async softDelete(orderId: string, userId: string): Promise<IOrder | null> {
+  async cancelOrder(orderId: string, userId: string): Promise<IOrder | null> {
     const order = await Order.findOne({
       _id: orderId,
       user: new mongoose.Types.ObjectId(userId),
@@ -103,6 +103,23 @@ class OrderService {
     if (!order) return null;
     if (order.status !== 'pending') {
       throw new Error('Only pending orders can be canceled');
+    }
+
+    order.status = 'canceled';
+    await order.save();
+    return order;
+  }
+
+  async softDelete(orderId: string, userId: string): Promise<IOrder | null> {
+    const order = await Order.findOne({
+      _id: orderId,
+      user: new mongoose.Types.ObjectId(userId),
+      isDeleted: false,
+    });
+
+    if (!order) return null;
+    if (order.status !== 'pending') {
+      throw new Error('Only pending orders can be deleted');
     }
 
     order.isDeleted = true;

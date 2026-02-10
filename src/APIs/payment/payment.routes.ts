@@ -4,35 +4,43 @@ import paymentController from './payment.controller.ts';
 
 import authenticateToken from '../../middlewares/authenticateToken.ts';
 import authorizeRole from '../../middlewares/authorizeRole.ts';
+import validate from '../../middlewares/zod.validation.ts';
+import {
+  createPaymentSchema,
+  initializePaymentSchema,
+  verifyPaymentSchema,
+  cancelPaymentSchema,
+} from './payment.schema.ts';
 
 const paymentRouter = express.Router();
 
+paymentRouter.use(authenticateToken);
+
 // CRUD operations for payment records
-paymentRouter.get(
+paymentRouter.get('/', authorizeRole(['admin']), paymentController.getAll);
+paymentRouter.get('/:id', paymentController.getById);
+paymentRouter.post(
   '/',
-  authenticateToken,
-  authorizeRole(['admin']),
-  paymentController.getAll,
+  validate(createPaymentSchema),
+  paymentController.create,
 );
-paymentRouter.get('/:id', authenticateToken, paymentController.getById);
-paymentRouter.post('/', authenticateToken, paymentController.create);
 
 // Payment flow operations
 paymentRouter.post(
   '/:id/initialize',
-  authenticateToken,
+  validate(initializePaymentSchema),
   paymentController.initializePayment,
 );
-paymentRouter.get('/:id/verify', paymentController.verifyPayment);
+paymentRouter.get(
+  '/:id/verify',
+  validate(verifyPaymentSchema),
+  paymentController.verifyPayment,
+);
 paymentRouter.post(
   '/:id/cancel',
-  authenticateToken,
+  validate(cancelPaymentSchema),
   paymentController.cancelPayment,
 );
-paymentRouter.get(
-  '/:id/status',
-  authenticateToken,
-  paymentController.checkPaymentStatus,
-);
+paymentRouter.get('/:id/status', paymentController.checkPaymentStatus);
 
 export default paymentRouter;
