@@ -1,0 +1,125 @@
+﻿├─ .gitignore
+├─ .prettierignore
+├─ .prettierrc
+├─ development.env
+├─ eslint.config.mjs
+├─ example.env
+├─ package-lock.json
+├─ package.json
+├─ production.env
+├─ README.md
+├─ tsconfig.json
+├─ .husky/
+   ├─ pre-commit
+   ├─ _/
+      ├─ .gitignore
+      ├─ applypatch-msg
+      ├─ commit-msg
+      ├─ h
+      ├─ husky.sh
+      ├─ post-applypatch
+      ├─ post-checkout
+      ├─ post-commit
+      ├─ post-merge
+      ├─ post-rewrite
+      ├─ pre-applypatch
+      ├─ pre-auto-gc
+      ├─ pre-commit
+      ├─ pre-merge-commit
+      ├─ pre-push
+      ├─ pre-rebase
+      ├─ prepare-commit-msg
+├─ src/
+   ├─ app.ts
+   ├─ index.ts
+   ├─ router.ts
+   ├─ APIs/
+      ├─ authentication/
+         ├─ auth.controller.ts
+         ├─ auth.interface.ts
+         ├─ auth.routes.ts
+         ├─ auth.service.ts
+         ├─ jwt.service.ts
+      ├─ cart/
+         ├─ cart.controller.ts
+         ├─ cart.interface.ts
+         ├─ cart.model.ts
+         ├─ cart.routes.ts
+         ├─ cart.schema.ts
+         ├─ cart.service.ts
+      ├─ category/
+         ├─ category.controller.ts
+         ├─ category.interface.ts
+         ├─ category.model.ts
+         ├─ category.routes.ts
+         ├─ category.schema.ts
+         ├─ category.service.ts
+      ├─ comment/
+         ├─ comment.controller.ts
+         ├─ comment.interface.ts
+         ├─ comment.model.ts
+         ├─ comment.routes.ts
+         ├─ comment.service.ts
+      ├─ order/
+         ├─ order.constants.ts
+         ├─ order.controller.ts
+         ├─ order.interface.ts
+         ├─ order.model.ts
+         ├─ order.routes.ts
+         ├─ order.schema.ts
+         ├─ order.service.ts
+      ├─ otp/
+         ├─ otp.controller.ts
+         ├─ otp.interface.ts
+         ├─ otp.model.ts
+         ├─ otp.routes.ts
+         ├─ otp.service.ts
+      ├─ payment/
+         ├─ payment.constants.ts
+         ├─ payment.controller.ts
+         ├─ payment.interface.ts
+         ├─ payment.model.ts
+         ├─ payment.routes.ts
+         ├─ payment.schema.ts
+         ├─ payment.service.ts
+         ├─ zarinpal.interface.ts
+         ├─ zarinpal.service.ts
+      ├─ product/
+         ├─ product.controller.ts
+         ├─ product.interface.ts
+         ├─ product.model.ts
+         ├─ product.routes.ts
+         ├─ product.schema.ts
+         ├─ product.service.ts
+      ├─ ticket/
+         ├─ ticket.controller.ts
+         ├─ ticket.interface.ts
+         ├─ ticket.model.ts
+         ├─ ticket.routes.ts
+         ├─ ticket.service.ts
+      ├─ user/
+         ├─ user.controller.ts
+         ├─ user.interface.ts
+         ├─ user.model.ts
+         ├─ user.routes.ts
+         ├─ user.service.ts
+   ├─ config/
+      ├─ dbConnection.ts
+   ├─ middlewares/
+      ├─ authenticateToken.ts
+      ├─ authorizeRole.ts
+      ├─ upload.ts
+      ├─ zod.validation.ts
+   ├─ types/
+      ├─ express/
+         ├─ index.d.ts
+      ├─ express-session/
+         ├─ index.d.ts
+      ├─ jsonwebtoken/
+         ├─ index.d.ts
+   ├─ utils/
+      ├─ generateRandomCode.ts
+      ├─ generateTrackingNumber.ts
+      ├─ getErrorMessage.ts
+      ├─ mail.ts
+      ├─ removeFile.ts

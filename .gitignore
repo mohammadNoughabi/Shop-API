@@ -4,3 +4,4 @@ development.env
 production.env
 uploads
 dist
+coverage/

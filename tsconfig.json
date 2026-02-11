@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "rootDir": "./src",
+    // "rootDir": "./src",
     "outDir": "./dist",
     "module": "esnext",
     "moduleResolution": "node",
@@ -14,6 +14,6 @@
     "experimentalDecorators": true,
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "vitest.config.ts", "test/**/*.ts"],
   "exclude": ["node_modules"]
 }

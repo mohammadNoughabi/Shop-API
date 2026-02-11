@@ -19,8 +19,9 @@ export default tseslint.config(
       },
       parser: tseslint.parser,
       parserOptions: {
-        projectService: true,
         tsconfigRootDir: import.meta.dirname,
+        // Optional but recommended in 2025+:
+        project: true, // ← let it auto-discover tsconfig.json
       },
     },
     settings: {
