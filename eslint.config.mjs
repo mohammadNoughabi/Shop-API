@@ -135,7 +135,7 @@ export default tseslint.config(
     rules: {
       'import/extensions': [
         'error',
-        'always',
+        'ignorePackages',
         {
           ts: 'always',
           tsx: 'always',

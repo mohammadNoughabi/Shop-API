@@ -1,15 +1,18 @@
-import { defineConfig } from 'vitest/config.ts';
+import { defineConfig } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  plugins: [tsconfigPaths()], // This makes your tsconfig paths work in tests (future-proof)
+  plugins: [tsconfigPaths()],
 
   test: {
-    globals: true, // No need to import describe/it/expect every time
-    environment: 'node', // Very important for backend
-    include: ['src/**/*.{test,spec}.{ts,js}'],
+    globals: true,
+    environment: 'node',
 
-    setupFiles: ['./test/setup.ts'], // We'll create this next
+    // Look inside test folder
+    include: ['test/**/*.{test,spec}.ts'],
+
+    // Correct path
+    setupFiles: ['./test/setup.ts'],
 
     coverage: {
       provider: 'v8',
@@ -19,7 +22,6 @@ export default defineConfig({
         'dist/**',
         '**/*.d.ts',
         'test/**',
-        'src/test/**',
         'src/**/*.config.ts',
       ],
     },

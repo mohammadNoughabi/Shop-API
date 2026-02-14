@@ -1,28 +1,44 @@
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import { beforeAll, afterAll, beforeEach } from 'vitest';
+import dotenv from 'dotenv';
 
-let mongoServer: MongoMemoryServer;
+dotenv.config({ path: './test.env' });
+
+// Use your test MongoDB connection string
+const TEST_MONGO_URI = `mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DATABASE_NAME}`;
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
+  try {
+    console.log('🔌 Connecting to test MongoDB...');
 
-  await mongoose.connect(mongoUri);
-  console.log('✅ Test MongoDB connected (in-memory)');
+    await mongoose.connect(TEST_MONGO_URI);
+
+    console.log('✅ Connected to test MongoDB');
+  } catch (error) {
+    console.error('❌ Failed to connect to test MongoDB:');
+    console.error(error);
+    throw error;
+  }
 });
 
 afterAll(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
-  console.log('🛑 Test MongoDB stopped');
+  if (mongoose.connection.readyState !== 0) {
+    // Drop the test database after all tests
+    await mongoose.connection.dropDatabase();
+    await mongoose.connection.close();
+    console.log('✅ Disconnected from test MongoDB');
+  }
 });
 
-// Clear database between tests (prevents data leakage)
+// Clear all collections between tests
 beforeEach(async () => {
-  const collections = mongoose.connection.collections;
+  if (mongoose.connection.readyState !== 0) {
+    const collections = mongoose.connection.collections;
 
-  await Promise.all(
-    Object.values(collections).map((collection) => collection.deleteMany({})),
-  );
+    for (const key in collections) {
+      const collection = collections[key];
+      // eslint-disable-next-line no-await-in-loop
+      await collection.deleteMany({});
+    }
+  }
 });

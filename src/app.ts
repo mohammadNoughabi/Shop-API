@@ -31,9 +31,8 @@ app.use(
 // ── Routes ─────────────────────────────────────────────────────
 app.use('/api', router);
 
-// Optional: health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({
+  return res.status(200).json({
     status: 'ok',
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
