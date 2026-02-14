@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx --env-file=development.env --watch src/index.ts",
     "build": "tsc --build",
-    "start": "node --env-file=production.env dist/index.js",
+    "start": "node --env-file=production.env dist/src/index.js",
     "prepare": "husky",
     "test": "vitest",
     "test:watch": "vitest --watch",
