@@ -4,7 +4,8 @@ import 'jsonwebtoken';
 declare module 'jsonwebtoken' {
   export interface JwtPayload {
     id: string;
-    email: string;
-    role:string;
+    username: string;
+    role: string;
+    email?: string; // optional, only if you include it in the token payload
   }
 }

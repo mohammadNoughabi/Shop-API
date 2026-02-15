@@ -30,8 +30,8 @@ categoryRouter.post(
   '/',
   authenticateToken,
   authorizeRole(['admin']),
-  validate(createCategorySchema),
   upload.single('thumbnail'),
+  validate(createCategorySchema),
   categoryController.create,
 );
 
@@ -39,8 +39,8 @@ categoryRouter.put(
   '/:id',
   authenticateToken,
   authorizeRole(['admin']),
-  validate(updateCategorySchema),
   upload.single('thumbnail'),
+  validate(updateCategorySchema),
   categoryController.update,
 );
 

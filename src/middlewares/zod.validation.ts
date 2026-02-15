@@ -15,6 +15,7 @@ const validate =
 
     if (!result.success) {
       const error = result.error;
+      console.log(`[ZOD ERROR] : ${error}`);
 
       if (error instanceof ZodError) {
         return res.status(400).json({

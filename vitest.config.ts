@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import { loadEnv } from 'vite';
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
@@ -8,11 +9,15 @@ export default defineConfig({
     globals: true,
     environment: 'node',
 
+    // Load environment variables for the test environment
+    env: loadEnv('test', process.cwd(), ''),
     // Look inside test folder
     include: ['test/**/*.{test,spec}.ts'],
 
-    // Correct path
-    setupFiles: ['./test/setup.ts'],
+    setupFiles: ['./test/setup/vitest.setup.ts'],
+    globalSetup: ['./test/setup/global.setup.ts'],
+    testTimeout: 30000,
+    hookTimeout: 60000,
 
     coverage: {
       provider: 'v8',

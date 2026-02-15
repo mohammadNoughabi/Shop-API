@@ -5,8 +5,9 @@ declare global {
     interface Request {
       user: JwtPayload & {
         id: string;
-        email: string;
+        username: string;
         role: string;
+        email?: string;
       };
     }
 
@@ -14,6 +15,12 @@ declare global {
       success: boolean;
       message: string;
       data?: object;
+    }
+
+    interface Error {
+      statusCode?: number;
+      message: string;
+      stack?: string;
     }
   }
 }

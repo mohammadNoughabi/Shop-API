@@ -30,13 +30,13 @@ class JwtService {
     // Generate new tokens
     const newAccessToken = this.generateAccessToken({
       id: decoded.id,
-      email: decoded.email,
+      username: decoded.username,
       role: decoded.role,
     });
 
     const newRefreshToken = this.generateRefreshToken({
       id: decoded.id,
-      email: decoded.email,
+      username: decoded.username,
       role: decoded.role,
     });
 

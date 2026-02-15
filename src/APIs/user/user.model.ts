@@ -1,45 +1,45 @@
-import mongoose from "mongoose";
-import bcrypt from "bcrypt";
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 
-import type { IUser } from "./user.interface.ts";
+import type { IUser } from './user.interface.ts';
 
 const userSchema = new mongoose.Schema<IUser>(
   {
     username: {
       type: String,
-      required: [true, "username is required"],
+      required: [true, 'username is required'],
     },
     email: {
       type: String,
-      required: [true, "Email is required"],
+      default: '',
       unique: [
         true,
-        "User already exists with this email , please login instead",
+        'User already exists with this email , please login instead',
       ],
       match: [
         /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-        "Please enter a valid email address",
+        'Please enter a valid email address',
       ],
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
-      minlength: [8, "Password must be at least 8 characters"],
+      required: [true, 'Password is required'],
+      minlength: [8, 'Password must be at least 8 characters'],
     },
     role: {
       type: String,
-      enum: ["regular", "admin"],
-      default: "regular",
+      enum: ['regular', 'admin'],
+      default: 'regular',
     },
     profilePic: {
       type: String,
-      default: "",
+      default: '',
     },
     favorites: {
       type: [
         {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
+          ref: 'Product',
         },
       ],
       default: [],
@@ -58,8 +58,8 @@ const userSchema = new mongoose.Schema<IUser>(
   },
 );
 
-userSchema.pre<IUser>("save", async function () {
-  if (!this.isModified("password")) {
+userSchema.pre<IUser>('save', async function () {
+  if (!this.isModified('password')) {
     return;
   }
 
@@ -69,9 +69,11 @@ userSchema.pre<IUser>("save", async function () {
 userSchema.methods.comparePassword = async function (
   candidatePassword: string,
 ): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.password);
+  const password = this.password as string;
+  const result = await bcrypt.compare(candidatePassword, password);
+  return result;
 };
 
-const User = mongoose.model<IUser>("User", userSchema);
+const User = mongoose.model<IUser>('User', userSchema);
 
 export default User;

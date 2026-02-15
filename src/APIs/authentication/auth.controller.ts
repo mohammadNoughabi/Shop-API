@@ -53,12 +53,12 @@ class AuthController {
       // Generate JWT tokens
       const accessToken = jwtService.generateAccessToken({
         id: String(user._id),
-        email: user.email,
+        username: user.username,
         role: user.role,
       });
       const refreshToken = jwtService.generateRefreshToken({
         id: String(user._id),
-        email: user.email,
+        username: user.username,
         role: user.role,
       });
 
@@ -107,7 +107,7 @@ class AuthController {
           .status(404)
           .json({ success: false, message: 'User not found' });
       }
-      const reciever = user.email;
+      const reciever = user.email as string;
       const subject = 'Password Reset Request';
       const htmlContent = `<p>Click <a href="https://shop.com/auth/reset-password?email=${encodeURIComponent(
         reciever,

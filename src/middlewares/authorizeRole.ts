@@ -5,13 +5,6 @@ const authorizeRole = (allowedRoles: string[]) => {
     try {
       const user = req.user;
 
-      if (!user || typeof user.role !== 'string') {
-        return res.status(401).json({
-          success: false,
-          message: 'Unauthorized',
-        });
-      }
-
       // Explicit type cast after check
       const role: string = user.role;
 
