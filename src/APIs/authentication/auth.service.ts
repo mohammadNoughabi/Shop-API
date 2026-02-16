@@ -2,12 +2,13 @@
 import User from '../user/user.model.ts';
 
 // import types
+import type { SendEmailResponse } from 'nodemailer';
 import type { IUser } from '../user/user.interface.ts';
 import type {
-  LoginDto,
-  RegisterDto,
-  forgotPasswordDto,
-  resetPasswordDto,
+  LoginData,
+  RegisterData,
+  ForgotPasswordData,
+  ResetPasswordData,
 } from './auth.interface.ts';
 
 // import uitls
@@ -15,7 +16,7 @@ import sendEmail from '../../utils/mail.ts';
 import generateRandomCode from '../../utils/generateRandomCode.ts';
 
 class AuthService {
-  async register(data: RegisterDto): Promise<IUser> {
+  async register(data: RegisterData): Promise<IUser | null> {
     const { username, email, password } = data;
     const existingUser = await User.findOne({
       email,
@@ -23,7 +24,7 @@ class AuthService {
     });
 
     if (existingUser) {
-      throw new Error('User already exists with this email');
+      return null;
     }
     const createdUser = new User({
       username,
@@ -34,23 +35,26 @@ class AuthService {
     return createdUser;
   }
 
-  async login(data: LoginDto) {
-    const { email, password } = data;
-    const user = await User.findOne({ email, isDeleted: false });
+  async login(data: LoginData): Promise<IUser | null> {
+    const { email, username, password } = data;
+    const user = await User.findOne({
+      $or: [{ email }, { username }],
+      isDeleted: false,
+    });
 
     if (!user) {
-      throw new Error('User not found');
+      return null;
     }
 
     // Compare the hashed passwords
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      throw new Error('Invalid credentials');
+      return null;
     }
     return user;
   }
 
-  async findUserByEmail(email: string) {
+  async findUserByEmail(email: string): Promise<IUser | null> {
     const user = await User.findOne({ email, isDeleted: false });
     if (!user) {
       return null;
@@ -58,7 +62,7 @@ class AuthService {
     return user;
   }
 
-  forgotPassword(data: forgotPasswordDto) {
+  forgotPassword(data: ForgotPasswordData): Promise<SendEmailResponse> {
     const code = generateRandomCode();
     const result = sendEmail(
       data.email,
@@ -71,11 +75,11 @@ class AuthService {
     return result;
   }
 
-  async resetPassword(data: resetPasswordDto): Promise<IUser | null> {
+  async resetPassword(data: ResetPasswordData): Promise<IUser | null> {
     const { userId, newPassword } = data;
     const user = await User.findById(userId);
     if (!user) {
-      throw new Error('User not found');
+      return null;
     }
     const updatedUser = await User.findByIdAndUpdate(
       userId,

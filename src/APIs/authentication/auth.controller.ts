@@ -12,18 +12,19 @@ class AuthController {
       const username: string = req.body.username;
       const email: string = req.body.email;
       const password: string = req.body.password;
-      if (!username || !email || !password) {
-        return res.status(400).json({
-          success: false,
-          message: 'Username, email, and password are required',
-        });
-      }
 
       const createdUser = await authService.register({
         username,
         email,
         password,
       });
+
+      if (!createdUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'User with this email already exists',
+        });
+      }
 
       res.status(201).json({
         success: true,
@@ -40,15 +41,29 @@ class AuthController {
 
   async login(req: Request, res: Response): Promise<Response | void> {
     try {
+      const username: string = req.body.username;
       const email: string = req.body.email;
       const password: string = req.body.password;
-      if (!email || !password) {
-        return res
-          .status(400)
-          .json({ success: false, message: 'Email and password are required' });
+      if (!email && !username) {
+        return res.status(400).json({
+          success: false,
+          message: 'At least one of username and email required',
+        });
       }
 
-      const user = await authService.login({ email, password });
+      if (!password) {
+        return res
+          .status(400)
+          .json({ success: false, message: 'Password is required' });
+      }
+
+      const user = await authService.login({ email, username, password });
+
+      if (!user) {
+        return res
+          .status(401)
+          .json({ success: false, message: 'Invalid credentials' });
+      }
 
       // Generate JWT tokens
       const accessToken = jwtService.generateAccessToken({
@@ -109,7 +124,7 @@ class AuthController {
       }
       const reciever = user.email as string;
       const subject = 'Password Reset Request';
-      const htmlContent = `<p>Click <a href="https://shop.com/auth/reset-password?email=${encodeURIComponent(
+      const htmlContent = `<p>Click <a href="${process.env.CLIENT_URL}/auth/reset-password?email=${encodeURIComponent(
         reciever,
       )}">here</a> to reset your password.</p>`;
       const result = await sendEmail(reciever, subject, htmlContent);
@@ -144,11 +159,11 @@ class AuthController {
       if (!user) {
         return res
           .status(404)
-          .json({ success: false, message: 'Usre not found' });
+          .json({ success: false, message: 'User not found' });
       }
       const updatedUser = await authService.resetPassword({
-        newPassword,
         userId: user._id.toString(),
+        newPassword,
       });
       res.status(200).json({
         success: true,

@@ -1,19 +1,27 @@
-export interface LoginDto {
-  email: string;
+import type {
+  RegisterInput,
+  LoginInput,
+  ForgotPasswordInput,
+  ResetPasswordInput,
+} from './auth.schema.ts';
+
+export interface LoginData extends LoginInput {
+  email?: string;
+  username?: string;
   password: string;
 }
 
-export interface RegisterDto {
+export interface RegisterData extends RegisterInput {
   username: string;
-  email: string;
+  email?: string;
   password: string;
 }
 
-export interface forgotPasswordDto {
+export interface ForgotPasswordData extends ForgotPasswordInput {
   email: string;
 }
 
-export interface resetPasswordDto {
+export interface ResetPasswordData extends ResetPasswordInput {
   userId: string;
   newPassword: string;
 }
