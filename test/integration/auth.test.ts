@@ -32,7 +32,7 @@ describe('Authentication API', () => {
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.createdUser.email).toBe('test@example.com');
+      expect(res.body.data.user.email).toBe('test@example.com');
     });
 
     it('should fail if email already exists', async () => {
@@ -45,7 +45,7 @@ describe('Authentication API', () => {
         role: 'regular',
       });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(409);
       expect(res.body.success).toBe(false);
     });
 
@@ -138,28 +138,39 @@ describe('Authentication API', () => {
   describe('POST /api/auth/forgot-pass', () => {
     it('should send reset email successfully', async () => {
       const user = await createTestUser();
+      const accessToken = await getUserToken();
 
-      const res = await request(app).post('/api/auth/forgot-pass').send({
-        email: user.email,
-      });
+      const res = await request(app)
+        .post('/api/auth/forgot-pass')
+        .send({
+          email: user.email,
+        })
+        .set('Cookie', accessToken);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
     });
 
     it('should return 404 if user not found', async () => {
-      const res = await request(app).post('/api/auth/forgot-pass').send({
-        email: 'notfound@example.com',
-      });
+      const accessToken = await getUserToken();
+
+      const res = await request(app)
+        .post('/api/auth/forgot-pass')
+        .send({
+          email: 'notfound@example.com',
+        })
+        .set('Cookie', accessToken);
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
     });
 
     it('should fail validation with invalid body', async () => {
+      const accessToken = await getUserToken();
       const res = await request(app)
         .post('/api/auth/forgot-pass')
-        .send({ email: 'invalid-email' });
+        .send({ email: 'invalid-email' })
+        .set('Cookie', accessToken);
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);

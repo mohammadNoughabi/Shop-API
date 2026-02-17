@@ -1,15 +1,10 @@
 import jwtService from './jwt.service.ts';
 import authService from './auth.service.ts';
 import userService from '../user/user.service.ts';
-import sendEmail from '../../utils/mail.ts';
 
 import type { Request, Response } from 'express';
 
-import type {
-  RegisterInput,
-  LoginInput,
-  ResetPasswordInput,
-} from './auth.schema.ts'; // ← assuming you export these types
+import type { RegisterInput, LoginInput } from './auth.schema.ts'; // ← assuming you export these types
 
 class AuthController {
   async register(req: Request, res: Response): Promise<Response> {
@@ -28,6 +23,13 @@ class AuthController {
     const body = req.body as LoginInput;
 
     const result = await authService.login(body);
+
+    if (!body.email && !body.username) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email or username is required',
+      });
+    }
 
     if (!result.success) {
       return res.status(result.statusCode || 500).json(result);
@@ -89,17 +91,16 @@ class AuthController {
       return res.status(userResult.statusCode || 500).json(userResult);
     }
 
-    const subject = 'Password Reset Request';
-    const html = `<p>Click <a href="${process.env.CLIENT_URL}/auth/reset-password?email=${encodeURIComponent(
-      user.email,
-    )}">here</a> to reset your password.</p>`;
-
-    const emailResult = await sendEmail(user.email, subject, html);
-
     // Note: storing email in session
     req.session!.email = user.email;
 
-    return res.status(emailResult.success ? 200 : 500).json(emailResult);
+    const result = await authService.forgotPassword(email);
+
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
+    }
+
+    return res.status(result.statusCode || 200).json(result);
   }
 
   async resetPassword(req: Request, res: Response): Promise<Response> {
@@ -112,7 +113,7 @@ class AuthController {
       });
     }
 
-    const { newPassword } = req.body as ResetPasswordInput;
+    const newPassword = req.body.newPassword as string;
 
     const findUserResult = await userService.findUserByEmail(email);
 
@@ -122,10 +123,10 @@ class AuthController {
 
     const user = findUserResult.data!.user;
 
-    const resetPasswordResult = await authService.resetPassword({
-      id: user._id.toString(),
+    const resetPasswordResult = await authService.resetPassword(
+      user._id.toString(),
       newPassword,
-    });
+    );
 
     if (!resetPasswordResult.success) {
       return res

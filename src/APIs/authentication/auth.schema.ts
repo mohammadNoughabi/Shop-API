@@ -46,7 +46,3 @@ export {
 
 export type RegisterInput = z.infer<typeof registerSchema>['body'];
 export type LoginInput = z.infer<typeof loginSchema>['body'];
-export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>['body'];
-export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>['body'] & {
-  id: string;
-};

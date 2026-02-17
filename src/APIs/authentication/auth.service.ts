@@ -2,12 +2,7 @@
 import userService from '../user/user.service.ts';
 
 // import types
-import type {
-  LoginInput,
-  RegisterInput,
-  ForgotPasswordInput,
-  ResetPasswordInput,
-} from './auth.schema.ts';
+import type { LoginInput, RegisterInput } from './auth.schema.ts';
 import type {
   LoginResult,
   RegisterResult,
@@ -84,19 +79,27 @@ class AuthService {
     };
   }
 
-  async forgotPassword(
-    data: ForgotPasswordInput,
-  ): Promise<ForgotPasswordResult> {
-    if (!data.email) {
+  async forgotPassword(email: string): Promise<ForgotPasswordResult> {
+    if (!email) {
       return {
         success: false,
         message: 'Email is required',
         statusCode: 400,
       };
     }
+
+    const existingUserResult = await userService.findUserByEmail(email);
+    if (!existingUserResult.success) {
+      return {
+        success: false,
+        message: 'User not found with this email address',
+        statusCode: 404,
+      };
+    }
+
     const code = generateRandomCode(6);
     const result = await sendEmail(
-      data.email,
+      email,
       'Welcome to our Shop',
       ` <div>
             <h2>Verification Email</h2>
@@ -109,14 +112,16 @@ class AuthService {
       statusCode: 200,
       data: {
         code,
-        email: data.email,
+        email: email,
         sendEmailResult: result,
       },
     };
   }
 
-  async resetPassword(data: ResetPasswordInput): Promise<ResetPasswordResult> {
-    const { id, newPassword } = data;
+  async resetPassword(
+    id: string,
+    newPassword: string,
+  ): Promise<ResetPasswordResult> {
     const duplicateIdResult = await userService.findUserById(id);
     if (!duplicateIdResult.success) {
       return {

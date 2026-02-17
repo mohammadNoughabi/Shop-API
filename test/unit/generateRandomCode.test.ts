@@ -4,7 +4,7 @@ import generateRandomCode from '../../src/utils/generateRandomCode.ts';
 
 describe('generateRandomCode', () => {
   it('should generate a random code of 5 digits', () => {
-    const code = generateRandomCode();
+    const code = generateRandomCode(5);
     expect(code).toMatch(/^\d{1,5}$/);
   });
 });

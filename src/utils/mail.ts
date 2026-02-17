@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-export interface SendEmailResponse {
+interface SendEmailResponse {
   success: boolean;
   messageId?: string;
   error?: string;
