@@ -16,7 +16,16 @@ import type {
 
 class CategoryService {
   async getAllCategories(): Promise<GetAllCategoriesResult> {
-    const categories = await Category.find({ isDeleted: false });
+    const categories = await Category.find({ isDeleted: false }).catch(
+      () => null,
+    ); // ← catch and return null on any error
+    if (!categories) {
+      return {
+        success: false,
+        message: 'Failed to retrieve categories',
+        statusCode: 500,
+      };
+    }
     return {
       success: true,
       message: 'Categories retrieved successfully',
@@ -26,7 +35,7 @@ class CategoryService {
   }
 
   async getCategoryById(id: string): Promise<GetCategoryByIdResult> {
-    const category = await Category.findById(id);
+    const category = await Category.findById(id).catch(() => null); // ← catch and return null on any error
     if (!category) {
       return {
         success: false,
@@ -48,7 +57,7 @@ class CategoryService {
     const existingCategory = await Category.findOne({
       title: data.title,
       isDeleted: false,
-    });
+    }).catch(() => null);
     if (existingCategory) {
       return {
         success: false,
@@ -56,7 +65,14 @@ class CategoryService {
         statusCode: 409,
       };
     }
-    const newCategory = await Category.create(data);
+    const newCategory = await Category.create(data).catch(() => null);
+    if (!newCategory) {
+      return {
+        success: false,
+        message: 'Failed to create category',
+        statusCode: 500,
+      };
+    }
     return {
       success: true,
       message: 'Category created successfully',
@@ -72,7 +88,7 @@ class CategoryService {
     const category = await Category.findOne({
       _id: id,
       isDeleted: false,
-    });
+    }).catch(() => null);
     if (!category) {
       return {
         success: false,
@@ -84,7 +100,7 @@ class CategoryService {
       title: data.title,
       isDeleted: false,
       _id: { $ne: id },
-    });
+    }).catch(() => null);
     if (existingCategoryWithTitle) {
       return {
         success: false,
@@ -94,7 +110,7 @@ class CategoryService {
     }
     const updatedCategory = await Category.findByIdAndUpdate(id, data, {
       new: true,
-    });
+    }).catch(() => null);
     if (!updatedCategory) {
       return {
         success: false,
@@ -114,7 +130,7 @@ class CategoryService {
     const existingCategory = await Category.findOne({
       _id: id,
       isDeleted: false,
-    });
+    }).catch(() => null);
     if (!existingCategory) {
       return {
         success: false,
@@ -126,7 +142,7 @@ class CategoryService {
       id,
       { isDeleted: true, deletedAt: new Date() },
       { new: true },
-    );
+    ).catch(() => null);
     if (!deletedCategory) {
       return {
         success: false,

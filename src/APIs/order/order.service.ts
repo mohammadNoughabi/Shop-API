@@ -22,16 +22,21 @@ class OrderService {
     const userObjectId = new Types.ObjectId(userId);
 
     // 1. Get user's cart
-    const cart = await Cart.findOne({ userId: userObjectId }).populate(
-      'items.productId',
-    );
+    const cart = await Cart.findOne({ userId: userObjectId })
+      .populate('items.productId')
+      .catch(() => null);
     if (!cart || cart.items.length === 0) {
       return { success: false, message: 'Cart is empty', statusCode: 400 };
     }
 
     // 2. Generate unique tracking number
     let trackingNumber = String(generateTrackingNumber(12));
-    const existingOrder = await Order.findOne({ trackingNumber });
+    const existingOrder = await Order.findOne({ trackingNumber }).catch(
+      () => null,
+    );
+    if (!existingOrder) {
+      trackingNumber = String(generateTrackingNumber(12));
+    }
     while (existingOrder) {
       trackingNumber = String(generateTrackingNumber(12));
     }
@@ -57,7 +62,19 @@ class OrderService {
       phone: data.phone,
       trackingNumber,
       status: 'pending',
-    });
+    }).catch(() => null);
+
+    if (!order) {
+      return {
+        success: false,
+        message: 'Failed to create order',
+        statusCode: 500,
+      };
+    }
+
+    // 4. Clear user's cart
+    cart.items = [];
+    await cart.save();
 
     return {
       success: true,
@@ -68,17 +85,18 @@ class OrderService {
   }
 
   async getMyOrders(userId: string): Promise<GetMyOrdersResult> {
-    const order = await Order.find({
+    const orders = await Order.find({
       userId: new Types.ObjectId(userId),
       isDeleted: false,
     })
       .populate('items.productId', 'name price image') // adjust fields
       .sort({ createdAt: -1 });
+
     return {
       success: true,
       message: 'Orders retrieved successfully',
       statusCode: 200,
-      data: { orders: order },
+      data: { orders },
     };
   }
 
@@ -121,7 +139,14 @@ class OrderService {
     }
 
     order.status = newStatus;
-    await order.save();
+    const dbSuccess = await order.save().catch(() => null);
+    if (!dbSuccess) {
+      return {
+        success: false,
+        message: 'Failed to update order status',
+        statusCode: 500,
+      };
+    }
     return {
       success: true,
       message: 'Order status updated successfully',
@@ -151,7 +176,14 @@ class OrderService {
     }
 
     order.status = 'canceled';
-    await order.save();
+    const dbSuccess = await order.save().catch(() => null);
+    if (!dbSuccess) {
+      return {
+        success: false,
+        message: 'Failed to cancel order',
+        statusCode: 500,
+      };
+    }
     return {
       success: true,
       message: 'Order canceled successfully',
@@ -178,7 +210,14 @@ class OrderService {
 
     order.isDeleted = true;
     order.deletedAt = new Date();
-    await order.save();
+    const dbSuccess = await order.save().catch(() => null);
+    if (!dbSuccess) {
+      return {
+        success: false,
+        message: 'Failed to delete order',
+        statusCode: 500,
+      };
+    }
     return {
       success: true,
       message: 'Order deleted successfully',

@@ -19,7 +19,14 @@ import type {
 } from './product.interface.ts';
 class ProductService {
   async getAllProducts(): Promise<GetAllProductsResult> {
-    const products = await Product.find({ isDeleted: false });
+    const products = await Product.find({ isDeleted: false }).catch(() => null);
+    if (!products) {
+      return {
+        success: false,
+        message: 'Failed to retrieve products',
+        statusCode: 500,
+      };
+    }
     return {
       success: true,
       message: 'Products retrieved successfully',
@@ -29,7 +36,7 @@ class ProductService {
   }
 
   async getProductById(id: string): Promise<GetProductByIdResult> {
-    const product = await Product.findById(id);
+    const product = await Product.findById(id).catch(() => null);
     if (!product) {
       return {
         success: false,
@@ -49,7 +56,7 @@ class ProductService {
     const existingProduct = await Product.findOne({
       title: data.title,
       isDeleted: false,
-    });
+    }).catch(() => null);
     if (existingProduct) {
       return {
         success: false,
@@ -62,7 +69,14 @@ class ProductService {
       ...data,
       category: new mongoose.Types.ObjectId(data.category),
     };
-    const newProduct = await Product.create(dataToCreate);
+    const newProduct = await Product.create(dataToCreate).catch(() => null);
+    if (!newProduct) {
+      return {
+        success: false,
+        message: 'Failed to create product',
+        statusCode: 500,
+      };
+    }
     return {
       success: true,
       message: 'Product created successfully',
@@ -78,7 +92,7 @@ class ProductService {
     const existingProduct = await Product.findOne({
       _id: id,
       isDeleted: false,
-    });
+    }).catch(() => null);
     if (!existingProduct) {
       return {
         success: false,
@@ -95,7 +109,7 @@ class ProductService {
     }
     const updatedProduct = await Product.findByIdAndUpdate(id, dataToUpdate, {
       new: true,
-    });
+    }).catch(() => null);
     if (!updatedProduct) {
       return {
         success: false,
@@ -115,7 +129,7 @@ class ProductService {
     const existingProduct = await Product.findOne({
       _id: id,
       isDeleted: false,
-    });
+    }).catch(() => null);
     if (!existingProduct) {
       return {
         success: false,
@@ -127,7 +141,7 @@ class ProductService {
       id,
       { isDeleted: true, deletedAt: new Date() },
       { new: true },
-    );
+    ).catch(() => null);
     if (!deletedProduct) {
       return {
         success: false,
@@ -153,7 +167,14 @@ class ProductService {
       },
     }));
 
-    await Product.bulkWrite(bulkOps);
+    const result = await Product.bulkWrite(bulkOps).catch(() => null);
+    if (!result) {
+      return {
+        success: false,
+        message: 'Failed to update stock',
+        statusCode: 500,
+      };
+    }
     return {
       success: true,
       message: 'Stock updated successfully',

@@ -13,7 +13,9 @@ import type { CreateUserInput, UpdatePasswordInput } from './user.schema.ts';
 
 class UserService {
   async findUserById(id: string): Promise<FindByIdResult> {
-    const user = await User.findOne({ _id: id, isDeleted: false });
+    const user = await User.findOne({ _id: id, isDeleted: false }).catch(
+      () => null,
+    );
     if (!user) {
       return {
         success: false,
@@ -30,7 +32,9 @@ class UserService {
   }
 
   async findUserByEmail(email: string): Promise<FindByEmailResult> {
-    const user = await User.findOne({ email, isDeleted: false });
+    const user = await User.findOne({ email, isDeleted: false }).catch(
+      () => null,
+    );
     if (!user) {
       return {
         success: false,
@@ -47,7 +51,9 @@ class UserService {
   }
 
   async findUserByUsername(username: string): Promise<FindByUsernameResult> {
-    const user = await User.findOne({ username, isDeleted: false });
+    const user = await User.findOne({ username, isDeleted: false }).catch(
+      () => null,
+    );
     if (!user) {
       return {
         success: false,
@@ -64,7 +70,10 @@ class UserService {
   }
 
   async getUserProfile(id: string): Promise<GetProfileResult> {
-    const existingUser = await User.findOne({ _id: id, isDeleted: false });
+    const existingUser = await User.findOne({
+      _id: id,
+      isDeleted: false,
+    }).catch(() => null);
     if (!existingUser) {
       return {
         success: false,
@@ -82,7 +91,9 @@ class UserService {
 
   async createUser(data: CreateUserInput): Promise<CreateUserResult> {
     const { username, email, password } = data;
-    const existingUser = await User.findOne({ email, isDeleted: false });
+    const existingUser = await User.findOne({ email, isDeleted: false }).catch(
+      () => null,
+    );
     if (existingUser) {
       return {
         success: false,
@@ -90,7 +101,16 @@ class UserService {
         statusCode: 400,
       };
     }
-    const newUser = await User.create({ username, email, password });
+    const newUser = await User.create({ username, email, password }).catch(
+      () => null,
+    );
+    if (!newUser) {
+      return {
+        success: false,
+        message: 'Failed to create user',
+        statusCode: 500,
+      };
+    }
     return {
       success: true,
       message: 'User created successfully',
@@ -103,7 +123,10 @@ class UserService {
     data: UpdatePasswordInput,
   ): Promise<UpdatePasswordResult> {
     const { id, newPassword } = data;
-    const existingUser = await User.findOne({ _id: id, isDeleted: false });
+    const existingUser = await User.findOne({
+      _id: id,
+      isDeleted: false,
+    }).catch(() => null);
     if (!existingUser) {
       return {
         success: false,
@@ -112,7 +135,14 @@ class UserService {
       };
     }
     existingUser.password = newPassword;
-    const updatedUser = await existingUser.save();
+    const updatedUser = await existingUser.save().catch(() => null);
+    if (!updatedUser) {
+      return {
+        success: false,
+        message: 'Failed to update password',
+        statusCode: 500,
+      };
+    }
     return {
       success: true,
       message: 'Password updated successfully',
@@ -122,7 +152,10 @@ class UserService {
   }
 
   async deleteUserAccount(id: string): Promise<DeleteAccountResult> {
-    const existingUser = await User.findOne({ _id: id, isDeleted: false });
+    const existingUser = await User.findOne({
+      _id: id,
+      isDeleted: false,
+    }).catch(() => null);
     if (!existingUser) {
       return {
         success: false,
@@ -134,7 +167,7 @@ class UserService {
       id,
       { isDeleted: true, deletedAt: new Date() },
       { new: true },
-    );
+    ).catch(() => null);
     if (!deletedUser) {
       return {
         success: false,

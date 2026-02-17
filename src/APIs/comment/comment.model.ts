@@ -7,23 +7,25 @@ const commentSchema = new mongoose.Schema<IComment>({
     type: String,
     required: true,
   },
-  product: {
+  productId: {
     type: Types.ObjectId,
     ref: 'Product',
     required: true,
   },
-  user: {
+  userId: {
     type: Types.ObjectId,
     ref: 'User',
     required: true,
   },
   likes: {
-    type: Number,
-    default: 0,
+    type: [Types.ObjectId],
+    ref: 'User',
+    default: [],
   },
   dislikes: {
-    type: Number,
-    default: 0,
+    type: [Types.ObjectId],
+    ref: 'User',
+    default: [],
   },
 });
 

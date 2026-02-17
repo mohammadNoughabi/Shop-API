@@ -18,7 +18,14 @@ import zarinpalService from './zarinpal.service.ts';
 
 class PaymentService {
   async getAllPayments(): Promise<GetAllPaymentsResult> {
-    const payments = await Payment.find();
+    const payments = await Payment.find().catch(() => null);
+    if (payments === null) {
+      return {
+        success: false,
+        message: 'Failed to retrieve payments',
+        statusCode: 500,
+      };
+    }
     return {
       success: true,
       message: 'Payments retrieved successfully',
@@ -28,7 +35,7 @@ class PaymentService {
   }
 
   async getPaymentById(id: string): Promise<GetPaymentByIdResult> {
-    const existingPayment = await Payment.findById(id);
+    const existingPayment = await Payment.findById(id).catch(() => null);
     if (!existingPayment) {
       return {
         success: false,
@@ -65,7 +72,15 @@ class PaymentService {
       userId,
       orderId,
       metadata,
-    });
+    }).catch(() => null);
+
+    if (!payment) {
+      return {
+        success: false,
+        message: 'Failed to create payment',
+        statusCode: 500,
+      };
+    }
     return {
       success: true,
       message: 'Payment created successfully',
@@ -77,7 +92,7 @@ class PaymentService {
   async initializePayment(
     data: InitializePaymentData,
   ): Promise<InitializePaymentResult> {
-    const payment = await Payment.findById(data.paymentId);
+    const payment = await Payment.findById(data.paymentId).catch(() => null);
     if (!payment)
       return {
         success: false,
@@ -109,7 +124,7 @@ class PaymentService {
 
     if (!result) {
       payment.status = 'failed';
-      await payment.save();
+      await payment.save().catch(() => null);
       await orderService.cancelOrder(
         payment.orderId!.toString(),
         payment.userId!.toString(),
@@ -125,7 +140,14 @@ class PaymentService {
     payment.initializedAt = new Date();
     payment.status = 'initialized';
 
-    await payment.save();
+    const dbSuccess = await payment.save().catch(() => null);
+    if (!dbSuccess) {
+      return {
+        success: false,
+        message: 'Failed to initialize payment',
+        statusCode: 500,
+      };
+    }
 
     return {
       success: true,
@@ -139,7 +161,7 @@ class PaymentService {
 
   async verifyPayment(data: VerifyPaymentData): Promise<VerifyPaymentResult> {
     const { authority, amount } = data;
-    const payment = await Payment.findOne({ authority });
+    const payment = await Payment.findOne({ authority }).catch(() => null);
     if (!payment)
       return {
         success: false,
@@ -162,7 +184,7 @@ class PaymentService {
     );
     if (!result) {
       payment.status = 'failed';
-      await payment.save();
+      await payment.save().catch(() => null);
       await orderService.cancelOrder(
         payment.orderId!.toString(),
         payment.userId!.toString(),
@@ -180,7 +202,14 @@ class PaymentService {
     payment.verifiedAt = new Date();
     payment.status = 'verified';
 
-    await payment.save();
+    const dbSuccess = await payment.save().catch(() => null);
+    if (!dbSuccess) {
+      return {
+        success: false,
+        message: 'Failed to verify payment',
+        statusCode: 500,
+      };
+    }
 
     return {
       success: true,
@@ -191,7 +220,7 @@ class PaymentService {
   }
 
   async cancelPayment(paymentId: string): Promise<CancelPaymentResult> {
-    const payment = await Payment.findById(paymentId);
+    const payment = await Payment.findById(paymentId).catch(() => null);
     if (!payment)
       return {
         success: false,
@@ -206,7 +235,14 @@ class PaymentService {
     payment.status = 'cancelled';
     payment.cancelledAt = new Date();
 
-    await payment.save();
+    const dbSuccess = await payment.save().catch(() => null);
+    if (!dbSuccess) {
+      return {
+        success: false,
+        message: 'Failed to cancel payment',
+        statusCode: 500,
+      };
+    }
     return {
       success: true,
       message: 'Payment cancelled successfully',
