@@ -1,5 +1,5 @@
 import type { Document } from 'mongoose';
-import type { Result } from '../../types/serviceResult/index.ts';
+import type { Result } from '../../types/serviceResult/index.d.ts';
 
 export interface ICategory extends Document {
   title: string;

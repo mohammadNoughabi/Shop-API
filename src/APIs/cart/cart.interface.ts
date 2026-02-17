@@ -1,5 +1,5 @@
 import type { Document, Types } from 'mongoose';
-import type { Result } from '../../types/serviceResult';
+import type { Result } from '../../types/serviceResult/index.d.ts';
 
 export interface ICartItem {
   productId: Types.ObjectId;

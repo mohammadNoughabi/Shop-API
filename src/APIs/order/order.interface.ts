@@ -1,5 +1,5 @@
 import type { Document, Types } from 'mongoose';
-import type { Result } from '../../types/serviceResult/index';
+import type { Result } from '../../types/serviceResult/index.d.ts';
 import type { OrderStatus } from './order.constants.ts';
 
 export interface IOrderItem {

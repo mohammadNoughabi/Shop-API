@@ -1,5 +1,5 @@
 import type { IUser } from '../user/user.interface.ts';
-import type { Result } from '../../types/serviceResult/index';
+import type { Result } from '../../types/serviceResult/index.d.ts';
 
 export type RegisterResult = Result<{ user: IUser }>;
 export type LoginResult = Result<{ user: IUser }>;

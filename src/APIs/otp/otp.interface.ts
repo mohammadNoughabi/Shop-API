@@ -1,4 +1,4 @@
-import type { Result } from '../../types/serviceResult';
+import type { Result } from '../../types/serviceResult/index.d.ts';
 
 export interface IOtp {
   email: string;

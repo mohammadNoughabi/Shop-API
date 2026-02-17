@@ -1,5 +1,5 @@
 import type { Document, Schema } from 'mongoose';
-import type { Result } from '../../types/serviceResult/index';
+import type { Result } from '../../types/serviceResult/index.d.ts';
 
 export interface IUser extends Document {
   username: string;
