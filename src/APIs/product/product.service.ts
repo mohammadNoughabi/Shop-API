@@ -5,84 +5,147 @@ import mongoose from 'mongoose';
 import Product from './product.model.ts';
 
 // types
-import type { IProduct } from './product.interface.ts';
 import type {
-  CreateProductData,
-  UpdateProductData,
+  CreateProductInput,
+  UpdateProductInput,
+} from './product.schema.ts';
+import type {
+  GetProductByIdResult,
+  GetAllProductsResult,
+  CreateProductResult,
+  UpdateProductResult,
+  DeleteProductResult,
+  BulkUpdateStockResult,
 } from './product.interface.ts';
 class ProductService {
-  async getAllProducts(): Promise<IProduct[]> {
+  async getAllProducts(): Promise<GetAllProductsResult> {
     const products = await Product.find({ isDeleted: false });
-    return products;
+    return {
+      success: true,
+      message: 'Products retrieved successfully',
+      statusCode: 200,
+      data: { products },
+    };
   }
 
-  async getProductById(id: string): Promise<IProduct | null> {
+  async getProductById(id: string): Promise<GetProductByIdResult> {
     const product = await Product.findById(id);
-    return product;
+    if (!product) {
+      return {
+        success: false,
+        message: 'Product not found',
+        statusCode: 404,
+      };
+    }
+    return {
+      success: true,
+      message: 'Product retrieved successfully',
+      statusCode: 200,
+      data: { product },
+    };
   }
 
-  async createProduct(
-    creationData: CreateProductData,
-  ): Promise<IProduct | null> {
+  async createProduct(data: CreateProductInput): Promise<CreateProductResult> {
     const existingProduct = await Product.findOne({
-      title: creationData.title,
+      title: data.title,
       isDeleted: false,
     });
     if (existingProduct) {
-      return null;
+      return {
+        success: false,
+        message: 'Product with this title already exists',
+        statusCode: 400,
+      };
     }
     // Convert category string to ObjectId
     const dataToCreate = {
-      ...creationData,
-      category: new mongoose.Types.ObjectId(creationData.category),
+      ...data,
+      category: new mongoose.Types.ObjectId(data.category),
     };
     const newProduct = await Product.create(dataToCreate);
-    return newProduct;
+    return {
+      success: true,
+      message: 'Product created successfully',
+      statusCode: 201,
+      data: { product: newProduct },
+    };
   }
 
   async updateProduct(
     id: string,
-    updateData: UpdateProductData,
-  ): Promise<IProduct | null> {
+    data: UpdateProductInput,
+  ): Promise<UpdateProductResult> {
     const existingProduct = await Product.findOne({
       _id: id,
       isDeleted: false,
     });
     if (!existingProduct) {
-      return null;
+      return {
+        success: false,
+        message: 'Product not found',
+        statusCode: 404,
+      };
     }
     let dataToUpdate;
-    if (updateData.category && typeof updateData.category === 'string') {
+    if (data.category && typeof data.category === 'string') {
       dataToUpdate = {
-        ...updateData,
-        category: new mongoose.Types.ObjectId(updateData.category),
+        ...data,
+        category: new mongoose.Types.ObjectId(data.category),
       };
     }
     const updatedProduct = await Product.findByIdAndUpdate(id, dataToUpdate, {
       new: true,
     });
-    return updatedProduct;
+    if (!updatedProduct) {
+      return {
+        success: false,
+        message: 'Product not found',
+        statusCode: 404,
+      };
+    }
+    return {
+      success: true,
+      message: 'Product updated successfully',
+      statusCode: 200,
+      data: { product: updatedProduct },
+    };
   }
 
-  async deleteProduct(id: string): Promise<IProduct | null> {
+  async deleteProduct(id: string): Promise<DeleteProductResult> {
     const existingProduct = await Product.findOne({
       _id: id,
       isDeleted: false,
     });
     if (!existingProduct) {
-      return null;
+      return {
+        success: false,
+        message: 'Product not found',
+        statusCode: 404,
+      };
     }
     const deletedProduct = await Product.findByIdAndUpdate(
       id,
       { isDeleted: true, deletedAt: new Date() },
       { new: true },
     );
-    return deletedProduct;
+    if (!deletedProduct) {
+      return {
+        success: false,
+        message: 'Product not found',
+        statusCode: 404,
+      };
+    }
+    return {
+      success: true,
+      message: 'Product deleted successfully',
+      statusCode: 200,
+      data: { product: deletedProduct },
+    };
   }
 
   async bulkUpdateStock(
     soldItems: { productId: string; quantity: number }[],
-  ): Promise<void> {
+  ): Promise<BulkUpdateStockResult> {
     const bulkOps = soldItems.map((item) => ({
       updateOne: {
         filter: { _id: item.productId, isDeleted: false },
@@ -91,6 +154,11 @@ class ProductService {
     }));
 
     await Product.bulkWrite(bulkOps);
+    return {
+      success: true,
+      message: 'Stock updated successfully',
+      statusCode: 200,
+    };
   }
 }
 

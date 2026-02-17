@@ -24,7 +24,10 @@ class JwtService {
   }
 
   // Token refresh endpoint logic
-  handleRefreshToken(refreshToken: string) {
+  handleRefreshToken(refreshToken: string): {
+    newAccessToken: string;
+    newRefreshToken: string;
+  } {
     const decoded = this.validateRefreshToken(refreshToken);
 
     // Generate new tokens

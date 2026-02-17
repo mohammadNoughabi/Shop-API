@@ -1,14 +1,18 @@
-// import model
-import User from '../user/user.model.ts';
+// import User service
+import userService from '../user/user.service.ts';
 
 // import types
-import type { SendEmailResponse } from 'nodemailer';
-import type { IUser } from '../user/user.interface.ts';
 import type {
-  LoginData,
-  RegisterData,
-  ForgotPasswordData,
-  ResetPasswordData,
+  LoginInput,
+  RegisterInput,
+  ForgotPasswordInput,
+  ResetPasswordInput,
+} from './auth.schema.ts';
+import type {
+  LoginResult,
+  RegisterResult,
+  ForgotPasswordResult,
+  ResetPasswordResult,
 } from './auth.interface.ts';
 
 // import uitls
@@ -16,55 +20,82 @@ import sendEmail from '../../utils/mail.ts';
 import generateRandomCode from '../../utils/generateRandomCode.ts';
 
 class AuthService {
-  async register(data: RegisterData): Promise<IUser | null> {
+  async register(data: RegisterInput): Promise<RegisterResult> {
     const { username, email, password } = data;
-    const existingUser = await User.findOne({
-      email,
-      isDeleted: false,
-    });
-
-    if (existingUser) {
-      return null;
+    if (email) {
+      const duplicateEmailResult = await userService.findUserByEmail(email);
+      if (duplicateEmailResult.success) {
+        return {
+          success: false,
+          message: 'Email already exists',
+          statusCode: 409,
+        };
+      }
     }
-    const createdUser = new User({
+    const createUserResult = await userService.createUser({
       username,
       email,
       password,
     });
-    await createdUser.save();
-    return createdUser;
+    if (!createUserResult.success) {
+      return {
+        success: false,
+        message: 'Failed to create user',
+        statusCode: 500,
+      };
+    }
+    const user = createUserResult.data!.user;
+    return {
+      success: true,
+      message: 'User registered successfully',
+      statusCode: 201,
+      data: { user },
+    };
   }
 
-  async login(data: LoginData): Promise<IUser | null> {
+  async login(data: LoginInput): Promise<LoginResult> {
     const { email, username, password } = data;
-    const user = await User.findOne({
-      $or: [{ email }, { username }],
-      isDeleted: false,
-    });
-
-    if (!user) {
-      return null;
+    const findUserResult = email
+      ? await userService.findUserByEmail(email)
+      : await userService.findUserByUsername(username!);
+    if (!findUserResult.success) {
+      return {
+        success: false,
+        message: 'User not found',
+        statusCode: 404,
+      };
     }
+    const user = findUserResult.data!.user;
 
     // Compare the hashed passwords
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return null;
+      return {
+        success: false,
+        message: 'Invalid password',
+        statusCode: 401,
+      };
     }
-    return user;
+    return {
+      success: true,
+      message: 'Login successful',
+      statusCode: 200,
+      data: { user: user.toObject() },
+    };
   }
 
-  async findUserByEmail(email: string): Promise<IUser | null> {
-    const user = await User.findOne({ email, isDeleted: false });
-    if (!user) {
-      return null;
+  async forgotPassword(
+    data: ForgotPasswordInput,
+  ): Promise<ForgotPasswordResult> {
+    if (!data.email) {
+      return {
+        success: false,
+        message: 'Email is required',
+        statusCode: 400,
+      };
     }
-    return user;
-  }
-
-  forgotPassword(data: ForgotPasswordData): Promise<SendEmailResponse> {
-    const code = generateRandomCode();
-    const result = sendEmail(
+    const code = generateRandomCode(6);
+    const result = await sendEmail(
       data.email,
       'Welcome to our Shop',
       ` <div>
@@ -72,21 +103,46 @@ class AuthService {
             <p>your verification code is ${code}</p>
         </div>`,
     );
-    return result;
+    return {
+      success: true,
+      message: 'Verification code sent to email',
+      statusCode: 200,
+      data: {
+        code,
+        email: data.email,
+        sendEmailResult: result,
+      },
+    };
   }
 
-  async resetPassword(data: ResetPasswordData): Promise<IUser | null> {
-    const { userId, newPassword } = data;
-    const user = await User.findById(userId);
-    if (!user) {
-      return null;
+  async resetPassword(data: ResetPasswordInput): Promise<ResetPasswordResult> {
+    const { id, newPassword } = data;
+    const duplicateIdResult = await userService.findUserById(id);
+    if (!duplicateIdResult.success) {
+      return {
+        success: false,
+        message: 'User not found',
+        statusCode: 404,
+      };
     }
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { password: newPassword },
-      { new: true },
-    );
-    return updatedUser;
+    const updatePasswordResult = await userService.updateUserPassword({
+      id,
+      newPassword,
+    });
+    if (!updatePasswordResult.success) {
+      return {
+        success: false,
+        message: 'Failed to update password',
+        statusCode: 500,
+      };
+    }
+    const updatedUser = updatePasswordResult.data!.updatedUser;
+    return {
+      success: true,
+      message: 'Password reset successfully',
+      statusCode: 200,
+      data: { updatedUser },
+    };
   }
 }
 

@@ -1,181 +1,144 @@
 import jwtService from './jwt.service.ts';
 import authService from './auth.service.ts';
+import userService from '../user/user.service.ts';
+import sendEmail from '../../utils/mail.ts';
 
 import type { Request, Response } from 'express';
 
-// import utils
-import sendEmail from '../../utils/mail.ts';
+import type {
+  RegisterInput,
+  LoginInput,
+  ResetPasswordInput,
+} from './auth.schema.ts'; // ← assuming you export these types
 
 class AuthController {
-  async register(req: Request, res: Response): Promise<Response | void> {
-    try {
-      const username: string = req.body.username;
-      const email: string = req.body.email;
-      const password: string = req.body.password;
+  async register(req: Request, res: Response): Promise<Response> {
+    const body = req.body as RegisterInput;
 
-      const createdUser = await authService.register({
-        username,
-        email,
-        password,
-      });
+    const result = await authService.register(body);
 
-      if (!createdUser) {
-        return res.status(400).json({
-          success: false,
-          message: 'User with this email already exists',
-        });
-      }
-
-      res.status(201).json({
-        success: true,
-        message: 'User registered successfully',
-        data: { createdUser },
-      });
-    } catch (error) {
-      console.error(error);
-      res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
+
+    return res.status(result.statusCode || 201).json(result);
   }
 
-  async login(req: Request, res: Response): Promise<Response | void> {
-    try {
-      const username: string = req.body.username;
-      const email: string = req.body.email;
-      const password: string = req.body.password;
-      if (!email && !username) {
-        return res.status(400).json({
-          success: false,
-          message: 'At least one of username and email required',
-        });
-      }
+  async login(req: Request, res: Response): Promise<Response> {
+    const body = req.body as LoginInput;
 
-      if (!password) {
-        return res
-          .status(400)
-          .json({ success: false, message: 'Password is required' });
-      }
+    const result = await authService.login(body);
 
-      const user = await authService.login({ email, username, password });
-
-      if (!user) {
-        return res
-          .status(401)
-          .json({ success: false, message: 'Invalid credentials' });
-      }
-
-      // Generate JWT tokens
-      const accessToken = jwtService.generateAccessToken({
-        id: String(user._id),
-        username: user.username,
-        role: user.role,
-      });
-      const refreshToken = jwtService.generateRefreshToken({
-        id: String(user._id),
-        username: user.username,
-        role: user.role,
-      });
-
-      // Send tokens in response
-      res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
-      res.cookie('accessToken', accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 15 * 60 * 1000, // 15 minutes
-      });
-
-      res.status(200).json({ success: true, message: 'Login successful' });
-    } catch (error) {
-      console.error(error);
-      res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
+
+    const user = result.data!.user; // safe: success branch
+
+    const accessToken = jwtService.generateAccessToken({
+      id: String(user._id),
+      username: user.username,
+      role: user.role,
+    });
+
+    const refreshToken = jwtService.generateRefreshToken({
+      id: String(user._id),
+      username: user.username,
+      role: user.role,
+    });
+
+    const isProd = process.env.NODE_ENV === 'production';
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: isProd,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: isProd,
+      maxAge: 15 * 60 * 1000, // 15 min
+    });
+
+    return res.status(result.statusCode || 200).json(result);
   }
 
-  logout(req: Request, res: Response): Response {
-    try {
-      res.clearCookie('accessToken');
-      res.clearCookie('refreshToken');
+  logout(_req: Request, res: Response): Response {
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+
+    return res.status(200).json({
+      success: true,
+      message: 'Logged out successfully',
+    });
+  }
+
+  async forgotPassword(req: Request, res: Response): Promise<Response> {
+    const email = req.body.email as string;
+
+    const userResult = await userService.findUserByEmail(email);
+
+    if (!userResult.success) {
+      return res.status(userResult.statusCode || 500).json(userResult);
+    }
+
+    const user = userResult.data!.user;
+
+    if (!user.email) {
+      return res.status(userResult.statusCode || 500).json(userResult);
+    }
+
+    const subject = 'Password Reset Request';
+    const html = `<p>Click <a href="${process.env.CLIENT_URL}/auth/reset-password?email=${encodeURIComponent(
+      user.email,
+    )}">here</a> to reset your password.</p>`;
+
+    const emailResult = await sendEmail(user.email, subject, html);
+
+    // Note: storing email in session
+    req.session!.email = user.email;
+
+    return res.status(emailResult.success ? 200 : 500).json(emailResult);
+  }
+
+  async resetPassword(req: Request, res: Response): Promise<Response> {
+    const email = req.session!.email as string | undefined;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reset session expired or invalid',
+      });
+    }
+
+    const { newPassword } = req.body as ResetPasswordInput;
+
+    const findUserResult = await userService.findUserByEmail(email);
+
+    if (!findUserResult.success) {
+      return res.status(findUserResult.statusCode || 500).json(findUserResult);
+    }
+
+    const user = findUserResult.data!.user;
+
+    const resetPasswordResult = await authService.resetPassword({
+      id: user._id.toString(),
+      newPassword,
+    });
+
+    if (!resetPasswordResult.success) {
       return res
-        .status(200)
-        .json({ success: true, message: 'Logged out successfully' });
-    } catch (error) {
-      console.error(error);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
+        .status(resetPasswordResult.statusCode || 500)
+        .json(resetPasswordResult);
     }
-  }
 
-  async forgotPassword(req: Request, res: Response): Promise<Response | void> {
-    try {
-      const email: string = req.body.email;
-      const user = await authService.findUserByEmail(email);
-      if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: 'User not found' });
-      }
-      const reciever = user.email as string;
-      const subject = 'Password Reset Request';
-      const htmlContent = `<p>Click <a href="${process.env.CLIENT_URL}/auth/reset-password?email=${encodeURIComponent(
-        reciever,
-      )}">here</a> to reset your password.</p>`;
-      const result = await sendEmail(reciever, subject, htmlContent);
-      req.session!.email = reciever;
-      res.status(200).json({
-        success: true,
-        message: 'Password reset email sent',
-        data: { result },
-      });
-    } catch (error) {
-      console.error(error);
-      res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
-    }
-  }
+    // Clear session after successful reset
+    delete req.session!.email;
 
-  async resetPassword(req: Request, res: Response) {
-    try {
-      const email = req.session!.email;
-      const newPassword: string = req.body.newPassword;
-      if (!email || !newPassword) {
-        {
-          return res.status(400).json({
-            success: false,
-            message:
-              'Email and new password and verification code are required',
-          });
-        }
-      }
-      const user = await authService.findUserByEmail(email);
-      if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: 'User not found' });
-      }
-      const updatedUser = await authService.resetPassword({
-        userId: user._id.toString(),
-        newPassword,
-      });
-      res.status(200).json({
-        success: true,
-        message: 'Password reset successfully',
-        data: { updatedUser },
-      });
-    } catch (error) {
-      console.error(error);
-      res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
-    }
+    return res
+      .status(resetPasswordResult.statusCode || 200)
+      .json(resetPasswordResult);
   }
 }
 

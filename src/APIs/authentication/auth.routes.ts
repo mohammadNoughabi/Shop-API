@@ -17,11 +17,13 @@ authRouter.post('/login', validate(loginSchema), authController.login);
 authRouter.post('/logout', authenticateToken, authController.logout);
 authRouter.post(
   '/forgot-pass',
+  authenticateToken,
   validate(forgotPasswordSchema),
   authController.forgotPassword,
 );
 authRouter.post(
-  '/reset-pass',
+  '/reset-pass/',
+  authenticateToken,
   validate(resetPasswordSchema),
   authController.resetPassword,
 );

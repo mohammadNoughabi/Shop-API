@@ -1,4 +1,5 @@
 import type { Document, Types } from 'mongoose';
+import type { Result } from '../../types/serviceResult';
 
 export interface ICartItem {
   productId: Types.ObjectId;
@@ -14,13 +15,8 @@ export interface ICart extends Document {
   updatedAt: Date;
 }
 
-// Client → server after zod validation
-export interface AddCartItemData {
-  productId: string;
-  quantity: number;
-}
-
-export interface RemoveCartItemData {
-  productId: string;
-  quantity?: number; // optional – if missing or 0 → remove completely
-}
+export type GetCartResult = Result<{ cart: ICart | null }>;
+export type InitializeCartResult = Result<{ cart: ICart }>;
+export type AddCartItemResult = Result<{ updatedCart: ICart }>;
+export type RemoveCartItemResult = Result<{ updatedCart: ICart }>;
+export type RecalculateTotalResult = Result<{ updatedCart: ICart }>;

@@ -12,161 +12,88 @@ import type {
 } from './category.schema.ts';
 
 class CategoryController {
-  async getAll(req: Request, res: Response): Promise<Response> {
-    try {
-      const categories = await categoryService.getAllCategories();
-
-      return res.status(200).json({
-        success: true,
-        data: { categories },
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        success: false,
-        message: 'Internal server error',
-      });
+  async getAll(_req: Request, res: Response): Promise<Response> {
+    const result = await categoryService.getAllCategories();
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
+    return res.status(result.statusCode || 200).json(result);
   }
 
   async getById(req: Request, res: Response): Promise<Response> {
-    try {
-      const id = req.params.id as string;
-
-      const category = await categoryService.getCategoryById(id);
-      if (!category) {
-        return res.status(404).json({
-          success: false,
-          message: 'Category not found',
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: { category },
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        success: false,
-        message: 'Internal server error',
-      });
+    const id = req.params.id as string; // Zod already validated => safe string & ObjectId format
+    const result = await categoryService.getCategoryById(id);
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
+    return res.status(result.statusCode || 200).json(result);
   }
 
   async create(req: Request, res: Response): Promise<Response> {
-    try {
-      // Body is already validated by Zod
-      const body = req.body as CreateCategoryInput;
+    const body = req.body as CreateCategoryInput;
+    const file = req.file;
 
-      const file = req.file;
-      if (!file) {
-        return res.status(400).json({
-          success: false,
-          message: 'Thumbnail is required',
-        });
-      }
-
-      const createdCategory = await categoryService.createCategory({
-        ...body,
-        thumbnail: file.filename,
-      });
-
-      if (!createdCategory) {
-        await removeFile(file.filename);
-        return res.status(409).json({
-          success: false,
-          message: 'Category with this title already exists',
-        });
-      }
-
-      return res.status(201).json({
-        success: true,
-        message: 'Category created successfully',
-        data: { createdCategory },
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
+    if (!file) {
+      return res.status(400).json({
         success: false,
-        message: 'Internal server error',
+        message: 'Thumbnail is required',
       });
     }
+
+    const result = await categoryService.createCategory({
+      ...body,
+      thumbnail: file.filename,
+    });
+
+    if (!result.success) {
+      await removeFile(file.filename);
+      return res.status(result.statusCode || 500).json(result);
+    }
+
+    return res.status(result.statusCode || 201).json(result);
   }
 
   async update(req: Request, res: Response): Promise<Response> {
-    try {
-      const id = req.params.id as string;
-      const body = req.body as UpdateCategoryInput;
+    const id = req.params.id as string; // Zod validated => safe string & ObjectId format
+    const body = req.body as UpdateCategoryInput;
+    const file = req.file;
 
-      const file = req.file;
+    const updateData: UpdateCategoryInput & { thumbnail?: string } = {
+      ...body,
+    };
 
-      const updateData: UpdateCategoryInput & { thumbnail?: string } = {
-        ...body,
-      };
+    if (file) {
+      updateData.thumbnail = file.filename;
+    }
 
-      if (file) {
-        updateData.thumbnail = file.filename;
-      }
-
-      if (Object.keys(updateData).length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'No fields provided for update',
-        });
-      }
-
-      const updatedCategory = await categoryService.updateCategory(
-        id,
-        updateData,
-      );
-
-      if (!updatedCategory) {
-        return res.status(404).json({
-          success: false,
-          message: 'Category not found',
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        message: 'Category updated successfully',
-        data: { updatedCategory },
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
+    // Optional: block empty updates (nice to have)
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
         success: false,
-        message: 'Internal server error',
+        message: 'No fields provided for update',
       });
     }
+
+    const result = await categoryService.updateCategory(id, updateData);
+
+    if (!result.success) {
+      // Cleanup only newly uploaded file if business logic rejected
+      if (file) {
+        await removeFile(file.filename);
+      }
+      return res.status(result.statusCode || 500).json(result);
+    }
+
+    return res.status(result.statusCode || 200).json(result);
   }
 
   async delete(req: Request, res: Response): Promise<Response> {
-    try {
-      const id = req.params.id as string;
-
-      const deletedCategory = await categoryService.deleteCategory(id);
-
-      if (!deletedCategory) {
-        return res.status(404).json({
-          success: false,
-          message: 'Category not found',
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        message: 'Category deleted successfully',
-        data: { deletedCategory },
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        success: false,
-        message: 'Internal server error',
-      });
+    const id = req.params.id as string; // Zod validated => safe string & ObjectId format
+    const result = await categoryService.deleteCategory(id);
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
+    return res.status(result.statusCode || 200).json(result);
   }
 }
 

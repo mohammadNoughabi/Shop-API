@@ -1,22 +1,32 @@
-import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import Order from './order.model.ts';
 import Cart from '../cart/cart.model.ts';
 import { generateTrackingNumber } from '../../utils/generateTrackingNumber.ts';
 import { ORDER_STATUS_FLOW } from './order.constants.ts';
 import type { OrderStatus } from './order.constants.ts';
-import type { IOrder, CreateOrderInput } from './order.interface.ts';
+import type {
+  CreateOrderInput,
+  CreateOrderResult,
+  GetMyOrdersResult,
+  GetOrderByIdResult,
+  UpdateOrderStatusResult,
+  CancelOrderResult,
+  SoftDeleteOrderResult,
+} from './order.interface.ts';
 
 class OrderService {
   async createOrderFromCart(
     userId: string,
     data: CreateOrderInput,
-  ): Promise<IOrder | null> {
-    const userObjectId = new mongoose.Types.ObjectId(userId);
+  ): Promise<CreateOrderResult> {
+    const userObjectId = new Types.ObjectId(userId);
 
     // 1. Get user's cart
-    const cart = await Cart.findOne({ userId: userObjectId });
+    const cart = await Cart.findOne({ userId: userObjectId }).populate(
+      'items.productId',
+    );
     if (!cart || cart.items.length === 0) {
-      return null;
+      return { success: false, message: 'Cart is empty', statusCode: 400 };
     }
 
     // 2. Generate unique tracking number
@@ -28,7 +38,7 @@ class OrderService {
 
     // 3. Create order from cart snapshot
     const orderItems = cart.items.map((item) => ({
-      product: item.productId,
+      productId: item.productId,
       quantity: item.quantity,
       price: item.price,
     }));
@@ -39,7 +49,7 @@ class OrderService {
     );
 
     const order = await Order.create({
-      user: userObjectId,
+      userId: userObjectId,
       items: orderItems,
       total,
       address: data.address,
@@ -49,26 +59,47 @@ class OrderService {
       status: 'pending',
     });
 
-    return order;
+    return {
+      success: true,
+      message: 'Order created successfully',
+      statusCode: 201,
+      data: { order },
+    };
   }
 
-  async getMyOrders(userId: string): Promise<IOrder[]> {
+  async getMyOrders(userId: string): Promise<GetMyOrdersResult> {
     const order = await Order.find({
-      user: new mongoose.Types.ObjectId(userId),
+      userId: new Types.ObjectId(userId),
       isDeleted: false,
     })
-      .populate('items.product', 'name price image') // adjust fields
+      .populate('items.productId', 'name price image') // adjust fields
       .sort({ createdAt: -1 });
-    return order;
+    return {
+      success: true,
+      message: 'Orders retrieved successfully',
+      statusCode: 200,
+      data: { orders: order },
+    };
   }
 
-  async getOrderById(orderId: string, userId: string): Promise<IOrder | null> {
+  async getOrderById(
+    orderId: string,
+    userId: string,
+  ): Promise<GetOrderByIdResult> {
     const order = await Order.findOne({
       _id: orderId,
-      user: new mongoose.Types.ObjectId(userId),
+      userId: new Types.ObjectId(userId),
       isDeleted: false,
-    }).populate('items.product');
-    return order;
+    }).populate('items.productId', 'name price image'); // adjust fields
+    if (!order) {
+      return { success: false, message: 'Order not found', statusCode: 404 };
+    }
+    return {
+      success: true,
+      message: 'Order retrieved successfully',
+      statusCode: 200,
+      data: { order },
+    };
   }
 
   private isValidTransition(from: OrderStatus, to: OrderStatus): boolean {
@@ -78,9 +109,10 @@ class OrderService {
   async updateStatus(
     orderId: string,
     newStatus: OrderStatus,
-  ): Promise<IOrder | null> {
+  ): Promise<UpdateOrderStatusResult> {
     const order = await Order.findOne({ _id: orderId, isDeleted: false });
-    if (!order) return null;
+    if (!order)
+      return { success: false, message: 'Order not found', statusCode: 404 };
 
     if (!this.isValidTransition(order.status, newStatus)) {
       throw new Error(
@@ -90,34 +122,56 @@ class OrderService {
 
     order.status = newStatus;
     await order.save();
-    return order;
+    return {
+      success: true,
+      message: 'Order status updated successfully',
+      statusCode: 200,
+      data: { order },
+    };
   }
 
-  async cancelOrder(orderId: string, userId: string): Promise<IOrder | null> {
+  async cancelOrder(
+    orderId: string,
+    userId: string,
+  ): Promise<CancelOrderResult> {
     const order = await Order.findOne({
       _id: orderId,
-      user: new mongoose.Types.ObjectId(userId),
+      userId: new Types.ObjectId(userId),
       isDeleted: false,
     });
 
-    if (!order) return null;
+    if (!order)
+      return {
+        success: false,
+        message: 'Order not found',
+        statusCode: 404,
+      };
     if (order.status !== 'pending') {
       throw new Error('Only pending orders can be canceled');
     }
 
     order.status = 'canceled';
     await order.save();
-    return order;
+    return {
+      success: true,
+      message: 'Order canceled successfully',
+      statusCode: 200,
+      data: { cancelledOrder: order },
+    };
   }
 
-  async softDelete(orderId: string, userId: string): Promise<IOrder | null> {
+  async softDelete(
+    orderId: string,
+    userId: string,
+  ): Promise<SoftDeleteOrderResult> {
     const order = await Order.findOne({
       _id: orderId,
-      user: new mongoose.Types.ObjectId(userId),
+      userId: new Types.ObjectId(userId),
       isDeleted: false,
     });
 
-    if (!order) return null;
+    if (!order)
+      return { success: false, message: 'Order not found', statusCode: 404 };
     if (order.status !== 'pending') {
       throw new Error('Only pending orders can be deleted');
     }
@@ -125,7 +179,12 @@ class OrderService {
     order.isDeleted = true;
     order.deletedAt = new Date();
     await order.save();
-    return order;
+    return {
+      success: true,
+      message: 'Order deleted successfully',
+      statusCode: 200,
+      data: { deletedOrder: order },
+    };
   }
 }
 

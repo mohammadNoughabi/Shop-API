@@ -1,55 +1,88 @@
-import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import Cart from './cart.model.ts';
 import productService from '../product/product.service.ts';
 import type {
   ICart,
   ICartItem,
-  AddCartItemData,
-  RemoveCartItemData,
+  GetCartResult,
+  InitializeCartResult,
+  AddCartItemResult,
+  RemoveCartItemResult,
+  RecalculateTotalResult,
 } from './cart.interface';
+import type { AddCartItemInput, RemoveCartItemInput } from './cart.schema.ts';
 
 class CartService {
-  async getCart(userId: string): Promise<ICart | null> {
+  async getCart(userId: string): Promise<GetCartResult> {
     const cart = await Cart.findOne({
-      userId: new mongoose.Types.ObjectId(userId),
+      userId: new Types.ObjectId(userId),
     });
-    return cart;
+    if (!cart) {
+      return {
+        success: false,
+        message: 'Cart not found',
+        statusCode: 404,
+      };
+    }
+    return {
+      success: true,
+      message: 'Cart retrieved successfully',
+      statusCode: 200,
+      data: { cart },
+    };
   }
 
-  async initializeCart(userId: string): Promise<ICart | null> {
+  async initializeCart(userId: string): Promise<InitializeCartResult> {
     const existing = await Cart.findOne({
-      userId: new mongoose.Types.ObjectId(userId),
+      userId: new Types.ObjectId(userId),
     });
     if (existing) {
-      return existing; // already exists → return it (idempotent)
+      return {
+        success: true,
+        message: 'Cart already exists',
+        statusCode: 200,
+        data: { cart: existing },
+      };
     }
 
     const cart = await Cart.create({
-      userId: new mongoose.Types.ObjectId(userId),
+      userId: new Types.ObjectId(userId),
       items: [],
       totalAmount: 0,
     });
 
-    return cart;
+    return {
+      success: true,
+      message: 'Cart initialized successfully',
+      statusCode: 200,
+      data: { cart },
+    };
   }
 
   async addCartItem(
-    data: AddCartItemData & { userId: string },
-  ): Promise<ICart | null> {
+    data: AddCartItemInput & { userId: string },
+  ): Promise<AddCartItemResult> {
     const { userId, productId, quantity } = data;
 
-    const product = await productService.getProductById(productId);
-    if (!product) {
-      return null;
+    const findProductResult = await productService.getProductById(productId);
+    if (!findProductResult.success || !findProductResult.data?.product) {
+      return {
+        success: false,
+        message: 'Product not found',
+        statusCode: 404,
+      };
     }
 
-    const price = Number(product.price); // assuming product has .price field
+    const product = findProductResult.data.product;
 
-    const userObjectId = new mongoose.Types.ObjectId(userId);
-    const productObjectId = new mongoose.Types.ObjectId(productId);
+    const price = Number(product.price);
+
+    const userObjectId = new Types.ObjectId(userId);
+    const productObjectId = new Types.ObjectId(productId);
 
     // Atomic update: increment if exists, push if not
-    const updated = await Cart.findOneAndUpdate(
+    let updatedCart;
+    updatedCart = await Cart.findOneAndUpdate(
       {
         userId: userObjectId,
         'items.productId': productObjectId,
@@ -57,12 +90,26 @@ class CartService {
       {
         $inc: { 'items.$.quantity': quantity },
       },
-      { new: true },
+      { new: true, runValidators: true },
     );
 
-    if (updated) {
-      // Item existed → just incremented → recalculate total
-      return this.recalculateTotal(updated);
+    if (updatedCart) {
+      const recalc = await this.recalculateTotal(updatedCart);
+      if (!recalc.success || !recalc.data?.updatedCart) {
+        return {
+          success: false,
+          message: 'Failed to recalculate total',
+          statusCode: 500,
+        };
+      }
+      return {
+        success: true,
+        message: 'Cart item quantity updated successfully',
+        statusCode: 200,
+        data: {
+          updatedCart: recalc.data.updatedCart,
+        },
+      };
     }
 
     // Item did not exist → push new one
@@ -72,66 +119,104 @@ class CartService {
       quantity,
     };
 
-    const cartWithNewItem = await Cart.findOneAndUpdate(
+    updatedCart = await Cart.findOneAndUpdate(
       { userId: userObjectId },
-      {
-        $push: { items: newItem },
-      },
-      { new: true },
+      { $push: { items: newItem } },
+      { new: true, runValidators: true },
     );
 
-    if (!cartWithNewItem) {
-      return null;
+    if (!updatedCart) {
+      return {
+        success: false,
+        message: 'Cart not found for user',
+        statusCode: 404,
+      };
     }
 
-    return this.recalculateTotal(cartWithNewItem);
+    const recalc = await this.recalculateTotal(updatedCart);
+    if (!recalc.success || !recalc.data?.updatedCart) {
+      return {
+        success: false,
+        message: 'Failed to recalculate total',
+        statusCode: 500,
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Cart item added successfully',
+      statusCode: 200,
+      data: { updatedCart: recalc.data.updatedCart },
+    };
   }
 
   async removeCartItem(
-    data: RemoveCartItemData & { userId: string },
-  ): Promise<ICart | null> {
-    const { userId, productId, quantity = Infinity } = data; // Infinity = remove completely
+    data: RemoveCartItemInput & { userId: string },
+  ): Promise<RemoveCartItemResult> {
+    const { userId, productId, quantity = Infinity } = data;
 
-    const userObjectId = new mongoose.Types.ObjectId(userId);
-    const productObjectId = new mongoose.Types.ObjectId(productId);
+    const userObjectId = new Types.ObjectId(userId);
+    const productObjectId = new Types.ObjectId(productId);
 
-    let cart = await Cart.findOne({ userId: userObjectId });
+    const cart = await Cart.findOne({ userId: userObjectId });
     if (!cart) {
-      return null;
+      return { success: false, message: 'Cart not found', statusCode: 404 };
     }
 
     const itemIndex = cart.items.findIndex((i) =>
       i.productId.equals(productObjectId),
     );
     if (itemIndex === -1) {
-      return cart; // nothing to remove → return as-is
+      return {
+        success: false,
+        message: 'Cart item not found',
+        statusCode: 404,
+      };
     }
 
     const currentQty = cart.items[itemIndex].quantity;
 
     if (quantity >= currentQty || quantity === Infinity) {
-      // Remove completely
       cart.items.splice(itemIndex, 1);
     } else {
-      // Decrease
       cart.items[itemIndex].quantity -= quantity;
     }
 
-    cart = await cart.save();
+    const savedCart = await cart.save();
 
-    return this.recalculateTotal(cart);
+    const recalc = await this.recalculateTotal(savedCart);
+    if (!recalc.success || !recalc.data?.updatedCart) {
+      return {
+        success: false,
+        message: 'Failed to recalculate',
+        statusCode: 500,
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Cart item removed successfully',
+      statusCode: 200,
+      data: { updatedCart: recalc.data.updatedCart },
+    };
   }
 
-  private async recalculateTotal(cart: ICart): Promise<ICart> {
+  private async recalculateTotal(cart: ICart): Promise<RecalculateTotalResult> {
     const total = cart.items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0,
     );
 
     cart.totalAmount = total;
-    await cart.save();
 
-    return cart;
+    const saved = await cart.save();
+
+    return {
+      success: true,
+      message: 'Cart total recalculated',
+      statusCode: 200,
+      data: { updatedCart: saved },
+    };
   }
 }
 

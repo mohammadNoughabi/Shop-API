@@ -2,68 +2,144 @@
 import Category from './category.model.ts';
 
 // import types
-import type { ICategory } from './category.interface.ts';
 import type {
-  CreateCategoryData,
-  UpdateCategoryData,
+  CreateCategoryInput,
+  UpdateCategoryInput,
+} from './category.schema.ts';
+import type {
+  GetCategoryByIdResult,
+  GetAllCategoriesResult,
+  CreateCategoryResult,
+  UpdateCategoryResult,
+  DeleteCategoryResult,
 } from './category.interface.ts';
 
 class CategoryService {
-  async getAllCategories(): Promise<ICategory[]> {
+  async getAllCategories(): Promise<GetAllCategoriesResult> {
     const categories = await Category.find({ isDeleted: false });
-    return categories;
+    return {
+      success: true,
+      message: 'Categories retrieved successfully',
+      statusCode: 200,
+      data: { categories },
+    };
   }
 
-  async getCategoryById(id: string): Promise<ICategory | null> {
+  async getCategoryById(id: string): Promise<GetCategoryByIdResult> {
     const category = await Category.findById(id);
-    return category;
+    if (!category) {
+      return {
+        success: false,
+        message: 'Category not found',
+        statusCode: 404,
+      };
+    }
+    return {
+      success: true,
+      message: 'Category retrieved successfully',
+      statusCode: 200,
+      data: { category },
+    };
   }
 
   async createCategory(
-    creationData: CreateCategoryData,
-  ): Promise<ICategory | null> {
+    data: CreateCategoryInput,
+  ): Promise<CreateCategoryResult> {
     const existingCategory = await Category.findOne({
-      title: creationData.title,
+      title: data.title,
       isDeleted: false,
     });
     if (existingCategory) {
-      return null;
+      return {
+        success: false,
+        message: 'Category with this title already exists',
+        statusCode: 409,
+      };
     }
-    const newCategory = await Category.create(creationData);
-    return newCategory;
+    const newCategory = await Category.create(data);
+    return {
+      success: true,
+      message: 'Category created successfully',
+      statusCode: 201,
+      data: { category: newCategory },
+    };
   }
 
   async updateCategory(
     id: string,
-    updateData: UpdateCategoryData,
-  ): Promise<ICategory | null> {
-    const existingCategory: ICategory | null = await Category.findOne({
+    data: UpdateCategoryInput,
+  ): Promise<UpdateCategoryResult> {
+    const category = await Category.findOne({
       _id: id,
       isDeleted: false,
     });
-    if (!existingCategory) {
-      return null;
+    if (!category) {
+      return {
+        success: false,
+        message: 'Category not found',
+        statusCode: 404,
+      };
     }
-    const updatedCategory = await Category.findByIdAndUpdate(id, updateData, {
+    const existingCategoryWithTitle = await Category.findOne({
+      title: data.title,
+      isDeleted: false,
+      _id: { $ne: id },
+    });
+    if (existingCategoryWithTitle) {
+      return {
+        success: false,
+        message: 'Category with this title already exists',
+        statusCode: 409,
+      };
+    }
+    const updatedCategory = await Category.findByIdAndUpdate(id, data, {
       new: true,
     });
-    return updatedCategory;
+    if (!updatedCategory) {
+      return {
+        success: false,
+        message: 'Failed to update category',
+        statusCode: 500,
+      };
+    }
+    return {
+      success: true,
+      message: 'Category updated successfully',
+      statusCode: 200,
+      data: { category: updatedCategory },
+    };
   }
 
-  async deleteCategory(id: string): Promise<ICategory | null> {
+  async deleteCategory(id: string): Promise<DeleteCategoryResult> {
     const existingCategory = await Category.findOne({
       _id: id,
       isDeleted: false,
     });
     if (!existingCategory) {
-      return null;
+      return {
+        success: false,
+        message: 'Category not found',
+        statusCode: 404,
+      };
     }
     const deletedCategory = await Category.findByIdAndUpdate(
       id,
       { isDeleted: true, deletedAt: new Date() },
       { new: true },
     );
-    return deletedCategory;
+    if (!deletedCategory) {
+      return {
+        success: false,
+        message: 'Failed to delete category',
+        statusCode: 500,
+      };
+    }
+    return {
+      success: true,
+      message: 'Category deleted successfully',
+      statusCode: 200,
+      data: { category: deletedCategory },
+    };
   }
 }
 

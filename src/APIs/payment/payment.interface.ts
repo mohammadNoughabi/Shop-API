@@ -1,4 +1,5 @@
 import type { Document, Types } from 'mongoose';
+import type { Result } from '../../types/serviceResult/index';
 import type { PaymentStatus } from './payment.constants.ts';
 import type {
   CreatePaymentInput,
@@ -37,5 +38,12 @@ export type CreatePaymentData = CreatePaymentInput & {
 };
 
 export type InitializePaymentData = InitializePaymentInput;
-
 export type VerifyPaymentData = VerifyPaymentInput;
+
+export type GetAllPaymentsResult = Result<{ payments: IPayment[] }>;
+export type GetPaymentByIdResult = Result<{ payment: IPayment }>;
+export type CreatePaymentResult = Result<{ payment: IPayment }>;
+export type InitializePaymentResult = Result<{ redirectUrl: string }>;
+export type VerifyPaymentResult = Result<{ payment: IPayment }>;
+export type CancelPaymentResult = Result<{ payment: IPayment }>;
+export type CheckPaymentStatusResult = Result<{ paymentStatus: PaymentStatus }>;

@@ -1,27 +1,11 @@
-import type {
-  RegisterInput,
-  LoginInput,
-  ForgotPasswordInput,
-  ResetPasswordInput,
-} from './auth.schema.ts';
+import type { IUser } from '../user/user.interface.ts';
+import type { Result } from '../../types/serviceResult/index';
 
-export interface LoginData extends LoginInput {
-  email?: string;
-  username?: string;
-  password: string;
-}
-
-export interface RegisterData extends RegisterInput {
-  username: string;
-  email?: string;
-  password: string;
-}
-
-export interface ForgotPasswordData extends ForgotPasswordInput {
+export type RegisterResult = Result<{ user: IUser }>;
+export type LoginResult = Result<{ user: IUser }>;
+export type ForgotPasswordResult = Result<{
+  code: string;
   email: string;
-}
-
-export interface ResetPasswordData extends ResetPasswordInput {
-  userId: string;
-  newPassword: string;
-}
+  sendEmailResult: unknown;
+}>;
+export type ResetPasswordResult = Result<{ updatedUser: IUser }>;

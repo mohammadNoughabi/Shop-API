@@ -1,6 +1,5 @@
 import type { Document, Types } from 'mongoose';
-
-import type { CreateProductInput, UpdateProductInput } from './product.schema';
+import type { Result } from '../../types/serviceResult';
 
 export interface IProduct extends Document {
   title: string;
@@ -23,12 +22,9 @@ export interface ProductFiles {
   gallery?: Express.Multer.File[];
 }
 
-export type CreateProductData = CreateProductInput & {
-  image: string;
-  gallery: string[];
-};
-
-export type UpdateProductData = UpdateProductInput & {
-  image?: string;
-  gallery?: string[];
-};
+export type GetProductByIdResult = Result<{ product: IProduct }>;
+export type GetAllProductsResult = Result<{ products: IProduct[] }>;
+export type CreateProductResult = Result<{ product: IProduct }>;
+export type UpdateProductResult = Result<{ product: IProduct }>;
+export type DeleteProductResult = Result<{ product: IProduct }>;
+export type BulkUpdateStockResult = Result<null>;

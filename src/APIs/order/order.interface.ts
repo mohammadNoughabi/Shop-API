@@ -1,8 +1,9 @@
 import type { Document, Types } from 'mongoose';
+import type { Result } from '../../types/serviceResult/index';
 import type { OrderStatus } from './order.constants.ts';
 
 export interface IOrderItem {
-  product: Types.ObjectId;
+  productId: Types.ObjectId;
   quantity: number;
   price: number;
 }
@@ -15,14 +16,14 @@ export interface IOrder extends Document {
   phone: string;
   trackingNumber: string; // better as string
   status: OrderStatus;
-  user: Types.ObjectId;
+  userId: Types.ObjectId;
   isDeleted: boolean;
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// ==================== Input Types (Client → Server) ====================
+// ==================== Input Types (use in service) ====================
 
 export interface CreateOrderInput {
   address: string;
@@ -35,6 +36,9 @@ export interface UpdateOrderStatusInput {
   status: OrderStatus;
 }
 
-export interface OrderIdParam {
-  id: string;
-}
+export type CreateOrderResult = Result<{ order: IOrder }>;
+export type GetMyOrdersResult = Result<{ orders: IOrder[] }>;
+export type GetOrderByIdResult = Result<{ order: IOrder }>;
+export type UpdateOrderStatusResult = Result<{ order: IOrder }>;
+export type CancelOrderResult = Result<{ cancelledOrder: IOrder }>;
+export type SoftDeleteOrderResult = Result<{ deletedOrder: IOrder }>;

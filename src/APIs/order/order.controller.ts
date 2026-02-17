@@ -6,73 +6,57 @@ import type {
 } from './order.interface.ts';
 
 class OrderController {
-  async getMyOrders(req: Request, res: Response) {
-    const orders = await orderService.getMyOrders(req.user._id as string);
-    res.json({ success: true, data: { orders } });
+  async getMyOrders(req: Request, res: Response): Promise<Response> {
+    const userId = req.user._id as string;
+    const result = await orderService.getMyOrders(userId);
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
+    }
+    return res.status(result.statusCode || 200).json(result);
   }
 
-  async getById(req: Request, res: Response) {
+  async getById(req: Request, res: Response): Promise<Response> {
     const id = req.params.id as string;
-    const order = await orderService.getOrderById(id, req.user._id as string);
+    const userId = req.user._id as string;
+    const result = await orderService.getOrderById(id, userId);
 
-    if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Order not found' });
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
 
-    res.json({ success: true, data: order });
+    return res.status(result.statusCode || 200).json(result);
   }
 
-  async create(req: Request, res: Response) {
+  async create(req: Request, res: Response): Promise<Response> {
     const data = req.body as CreateOrderInput;
-    const order = await orderService.createOrderFromCart(
-      req.user._id as string,
-      data,
-    );
-    if (!order) {
-      return res.status(400).json({
-        success: false,
-        message: 'Order creation failed',
-      });
+    const userId = req.user._id as string;
+    const result = await orderService.createOrderFromCart(userId, data);
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
-    return res.status(201).json({
-      success: true,
-      message: 'Order placed successfully',
-      data: { order },
-    });
+    return res.status(result.statusCode || 200).json(result);
   }
 
   async updateStatus(req: Request, res: Response) {
     const id = req.params.id as string;
     const { status } = req.body as UpdateOrderStatusInput;
-    const order = await orderService.updateStatus(id, status);
+    const result = await orderService.updateStatus(id, status);
 
-    if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Order not found' });
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
 
-    return res.json({
-      success: true,
-      message: 'Status updated',
-      data: { order },
-    });
+    return res.status(result.statusCode || 200).json(result);
   }
 
   async softDelete(req: Request, res: Response) {
     const id = req.params.id as string;
-    const order = await orderService.softDelete(id, req.user._id as string);
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found or cannot be canceled',
-      });
+    const userId = req.user._id as string;
+    const result = await orderService.softDelete(id, userId);
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
-
-    return res.json({ success: true, message: 'Order canceled successfully' });
+    return res.status(result.statusCode || 200).json(result);
   }
 }
 

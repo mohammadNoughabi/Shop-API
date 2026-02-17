@@ -4,7 +4,7 @@ import { ORDER_STATUSES } from './order.constants.ts';
 
 const orderItemSchema = new mongoose.Schema(
   {
-    product: {
+    productId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Product',
       required: true,
@@ -32,7 +32,7 @@ const orderSchema = new mongoose.Schema<IOrder>(
       enum: ORDER_STATUSES,
       default: 'pending',
     },
-    user: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,

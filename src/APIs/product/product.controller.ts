@@ -6,187 +6,99 @@ import { removeFiles } from '../../utils/removeFile.ts';
 
 // types
 import type { Request, Response } from 'express';
-import type {
-  IProduct,
-  ProductFiles,
-  UpdateProductData,
-} from './product.interface.ts';
+import type { ProductFiles } from './product.interface.ts';
 import type {
   CreateProductInput,
   UpdateProductInput,
 } from './product.schema.ts';
 
 class ProductController {
-  async getAll(req: Request, res: Response): Promise<Response> {
-    try {
-      const products: IProduct[] = await productService.getAllProducts();
-      return res.status(200).json({
-        success: true,
-        data: { products },
-      });
-    } catch (error) {
-      console.log(error);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
+  async getAll(_req: Request, res: Response): Promise<Response> {
+    const result = await productService.getAllProducts();
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
+    return res.status(result.statusCode || 200).json(result);
   }
 
   async getById(req: Request, res: Response): Promise<Response> {
-    try {
-      const id = req.params.id as string;
-      const product: IProduct | null = await productService.getProductById(id);
-      if (!product) {
-        return res
-          .status(404)
-          .json({ success: false, message: 'Product not found' });
-      }
-      return res.status(200).json({
-        success: true,
-        data: { product },
-      });
-    } catch (error) {
-      console.log(error);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Internal serever error' });
+    const id = req.params.id as string; // already validated by Zod → safe string & ObjectId format
+    const result = await productService.getProductById(id);
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
+    return res.status(result.statusCode || 200).json(result);
   }
 
   async create(req: Request, res: Response): Promise<Response> {
-    try {
-      const body = req.body as CreateProductInput;
-      const files = req.files as ProductFiles | undefined;
+    const body = req.body as CreateProductInput;
+    const files = req.files as ProductFiles;
 
-      const imageFile = files?.image?.[0];
-      if (!imageFile) {
-        return res
-          .status(400)
-          .json({ success: false, message: 'Main image required' });
-      }
-      const imageFileName = imageFile.filename;
-
-      const galleryFiles = files.gallery ?? [];
-      const galleryFilenames = galleryFiles.map(
-        (file: Express.Multer.File) => file.filename,
-      );
-
-      const allFileNames: string[] = [imageFileName, ...galleryFilenames];
-
-      const createdProduct = await productService.createProduct({
-        ...body,
-        image: imageFileName,
-        gallery: galleryFilenames,
+    // Files are required — Zod can't validate multer files → we still check here
+    if (!files.image?.[0]) {
+      return res.status(400).json({
+        success: false,
+        message: 'Main image is required',
       });
-      if (!createdProduct) {
-        await removeFiles(allFileNames);
-        return res.status(409).json({
-          success: false,
-          message: 'Product with this title already exists',
-        });
-      }
-
-      return res.status(201).json({
-        success: true,
-        message: 'Product created successfully',
-        data: { createdProduct },
-      });
-    } catch (error) {
-      console.log(error);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
     }
+
+    const image = files.image[0].filename;
+    const gallery = files.gallery?.map((f) => f.filename) ?? [];
+
+    const result = await productService.createProduct({
+      ...body,
+      image,
+      gallery,
+    });
+
+    if (!result.success) {
+      await removeFiles([image, ...gallery].filter(Boolean));
+      return res.status(result.statusCode || 500).json(result);
+    }
+
+    return res.status(result.statusCode || 200).json(result);
   }
 
   async update(req: Request, res: Response): Promise<Response> {
-    try {
-      const id = req.params.id as string;
-      const body = req.body as UpdateProductInput;
-      const files = req.files as ProductFiles | undefined;
+    const id = req.params.id as string; // Zod validated
+    const body = req.body as UpdateProductInput;
+    const files = req.files as ProductFiles;
 
-      // Get existing product first to handle file cleanup if needed
-      const existingProduct = await productService.getProductById(id);
-      if (!existingProduct) {
-        return res.status(404).json({
-          success: false,
-          message: 'Product not found',
-        });
-      }
+    let image: string | undefined;
+    let gallery: string[] | undefined;
 
-      let imageFileName: string | undefined;
-      let galleryFilenames: string[] = [];
-
-      if (files?.image?.[0]) {
-        imageFileName = files.image[0].filename;
-        // Optional: remove old image file if new one is uploaded
-      }
-
-      if (files?.gallery) {
-        galleryFilenames = files.gallery.map(
-          (file: Express.Multer.File) => file.filename,
-        );
-        // Optional: remove old gallery files if new ones are uploaded
-      }
-
-      // Prepare update data
-      const updateData: UpdateProductData = {
-        ...body,
-        image: imageFileName,
-        gallery: galleryFilenames,
-      };
-
-      const updatedProduct = await productService.updateProduct(id, updateData);
-
-      if (!updatedProduct) {
-        // Clean up newly uploaded files if update failed
-        const allFileNames: string[] = [];
-        if (imageFileName) allFileNames.push(imageFileName);
-        if (galleryFilenames.length > 0) allFileNames.push(...galleryFilenames);
-
-        if (allFileNames.length > 0) {
-          await removeFiles(allFileNames);
-        }
-
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to update product',
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        message: `Product updated successfully`,
-        data: { updatedProduct },
-      });
-    } catch (error) {
-      console.log(error);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
+    if (files.image?.[0]) {
+      image = files.image[0].filename;
     }
+
+    if (files.gallery?.length) {
+      gallery = files.gallery.map((f) => f.filename);
+    }
+
+    const result = await productService.updateProduct(id, {
+      ...body,
+      ...(image !== undefined && { image }),
+      ...(gallery !== undefined && { gallery }),
+    });
+
+    // Cleanup only new files if business logic rejected update
+    if (!result.success && (image || gallery)) {
+      const toRemove: string[] = [];
+      if (image) toRemove.push(image);
+      if (gallery) toRemove.push(...gallery);
+      if (toRemove.length > 0) await removeFiles(toRemove);
+    }
+
+    return res.status(result.statusCode || 200).json(result);
   }
+
   async delete(req: Request, res: Response): Promise<Response> {
-    try {
-      const id = req.params.id as string;
-      const deletedProduct = await productService.deleteProduct(id);
-      if (!deletedProduct) {
-        return res.status(404).json({
-          success: false,
-          message: 'Product not found',
-        });
-      }
-      return res.status(200).json({
-        success: true,
-        message: `Product deleted successfully`,
-        data: { deletedProduct },
-      });
-    } catch (error) {
-      console.log(error);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
+    const id = req.params.id as string; // Zod validated
+    const result = await productService.deleteProduct(id);
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
+    return res.status(result.statusCode || 200).json(result);
   }
 }
 

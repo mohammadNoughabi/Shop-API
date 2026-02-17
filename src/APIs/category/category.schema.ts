@@ -49,6 +49,8 @@ export const categoryIdParamSchema = z.object({
 /**
  * Types inferred from Zod
  */
-export type CreateCategoryInput = z.infer<typeof createCategorySchema>['body'];
+export type CreateCategoryInput = z.infer<
+  typeof createCategorySchema
+>['body'] & { thumbnail: string };
 
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>['body'];

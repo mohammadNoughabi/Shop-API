@@ -24,14 +24,15 @@ productRouter.post(
   '/',
   authenticateToken,
   authorizeRole(['admin']),
-  validate(createProductSchema),
   upload.fields([{ name: 'image', maxCount: 1 }, { name: 'gallery' }]),
+  validate(createProductSchema),
   productController.create,
 );
 productRouter.put(
   '/:id',
   authenticateToken,
   authorizeRole(['admin']),
+  upload.fields([{ name: 'image', maxCount: 1 }, { name: 'gallery' }]),
   validate(updateProductSchema),
   productController.update,
 );

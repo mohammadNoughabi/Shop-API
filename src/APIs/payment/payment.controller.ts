@@ -7,280 +7,201 @@ import productService from '../product/product.service.ts';
 
 class PaymentController {
   async getAll(req: Request, res: Response): Promise<Response> {
-    try {
-      const payments = await paymentService.getAllPayments();
-      return res.status(200).json({
-        success: true,
-        message: 'Payments fetched successfully',
-        data: { payments },
-      });
-    } catch (error) {
-      console.log(error);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
+    const result = await paymentService.getAllPayments();
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
+    return res.status(result.statusCode || 200).json(result);
   }
 
   async getById(req: Request, res: Response): Promise<Response> {
-    try {
-      const id = req.params.id as string;
-      const payment = await paymentService.getPaymentById(id);
-      if (!payment) {
-        return res
-          .status(404)
-          .json({ success: false, message: 'Payment not found' });
-      }
-      return res.status(200).json({
-        success: true,
-        message: 'Payment fetched successfully',
-        data: { payment },
-      });
-    } catch (error) {
-      console.log(error);
-      return res
-        .status(500)
-        .json({ success: false, message: 'Internal server error' });
+    const id = req.params.id as string;
+    const result = await paymentService.getPaymentById(id);
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
+    return res.status(result.statusCode || 200).json(result);
   }
 
   async create(req: Request, res: Response): Promise<Response> {
-    try {
-      const userId = req.user._id as string;
-      const orderId = req.query.orderId as string;
-      const description = req.body.description as string;
-      const email = req.body.email as string;
-      const phone = req.body.phone as string;
+    const userId = req.user._id as string;
+    const orderId = req.query.orderId as string;
+    const description = req.body.description as string;
+    const email = req.body.email as string;
+    const phone = req.body.phone as string;
 
-      const user = await userService.findUserById(userId);
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: 'User not found',
-        });
-      }
+    const findUserResult = await userService.findUserById(userId);
+    if (!findUserResult.success || !findUserResult.data?.user) {
+      return res.status(findUserResult.statusCode || 500).json(findUserResult);
+    }
+    const user = findUserResult.data.user;
 
-      const order = await orderService.getOrderById(orderId, userId);
-      if (!order) {
-        return res.status(404).json({
-          success: false,
-          message: 'Order not found',
-        });
-      }
+    const findOrderResult = await orderService.getOrderById(orderId, userId);
+    if (!findOrderResult.success || !findOrderResult.data?.order) {
+      return res
+        .status(findOrderResult.statusCode || 500)
+        .json(findOrderResult);
+    }
+    const order = findOrderResult.data.order;
 
-      const amount = order.total;
+    const amount = order.total;
 
-      if (amount <= 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'Payment amount must be greater than 0',
-        });
-      }
-
-      const metadata = {
-        description,
-        email,
-        phone,
-      };
-
-      const createdPayment = await paymentService.createPayment({
-        userId: user._id,
-        orderId: order._id,
-        metadata,
-      });
-
-      return res.status(201).json({
-        success: true,
-        message: 'Payment created successfully',
-        data: { createdPayment },
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
+    if (amount <= 0) {
+      return res.status(400).json({
         success: false,
-        message: 'Internal server error',
+        message: 'Payment amount must be greater than 0',
       });
     }
+
+    const metadata = {
+      description,
+      email,
+      phone,
+    };
+
+    const result = await paymentService.createPayment({
+      userId: user._id,
+      orderId: order._id,
+      metadata,
+    });
+
+    return res.status(result.statusCode || 200).json(result);
   }
 
   async initializePayment(
     req: Request,
     res: Response,
   ): Promise<Response | null> {
-    try {
-      const paymentId = req.params.id as string;
+    const paymentId = req.params.id as string; // zod validated
+    const callbackUrl = `${process.env.BASE_URL}/payment/${paymentId}/verify`;
 
-      if (!paymentId) {
-        return res.status(404).json({
-          success: false,
-          message: 'payment not found',
-        });
-      }
+    const result = await paymentService.initializePayment({
+      paymentId,
+      callbackUrl,
+    });
 
-      const callbackUrl = `${process.env.BASE_URL}/payment/${paymentId}/verify`;
-
-      const result = await paymentService.initializePayment({
-        paymentId,
-        callbackUrl,
-      });
-
-      if (!result) {
-        return res.status(400).json({
-          success: false,
-          message: 'Payment initialization failed',
-        });
-      }
-
-      res.redirect(result.redirectUrl);
-      return null;
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        success: false,
-        message: 'Internal server error',
-      });
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
     }
+
+    const redirectUrl = result.data?.redirectUrl as string;
+
+    res.redirect(redirectUrl);
+    return null;
   }
 
   async verifyPayment(req: Request, res: Response): Promise<Response> {
-    try {
-      const paymentId = req.params.id as string;
-      const { authority, status } = req.query;
+    const paymentId = req.params.id as string;
+    const { authority, status } = req.query;
 
-      const payment = await paymentService.getPaymentById(paymentId);
-      if (!payment) {
-        return res.status(404).json({
-          success: false,
-          message: 'Payment not found',
-        });
-      }
+    // If payment was not successful, cancel it and return error response
+    if (status !== 'OK') {
+      const result = await paymentService.cancelPayment(paymentId);
+      return res.status(result.statusCode || 400).json(result);
+    }
 
-      if (status !== 'OK') {
-        await paymentService.cancelPayment(paymentId);
-        return res.status(400).json({
-          success: false,
-          message: 'Payment was cancelled by user',
-        });
-      }
-
-      if (payment.authority !== authority || authority === undefined) {
-        return res.status(400).json({
-          success: false,
-          message: 'Authority mismatch',
-        });
-      }
-
-      const verifiedPayment = await paymentService.verifyPayment({
-        authority: authority.toString(),
-        amount: String(payment.amount),
-      });
-
-      if (!verifiedPayment) {
-        return res.status(400).json({
-          success: false,
-          message: 'Payment verification failed',
-        });
-      }
-
-      const order = await orderService.getOrderById(
-        payment.orderId!.toString(),
-        payment.userId!.toString(),
-      );
-
-      if (!order) {
-        return res.status(404).json({
-          success: false,
-          message: 'Associated order not found',
-        });
-      }
-
-      await orderService.updateStatus(order._id.toString(), 'paid');
-
-      const soldItems = order.items.map((item) => ({
-        productId: item.product._id.toString(),
-        quantity: item.quantity,
-      }));
-
-      await productService.bulkUpdateStock(soldItems);
-
-      return res.status(200).json({
-        success: true,
-        message: 'Payment verified successfully',
-        data: { payment: verifiedPayment, order, soldItems },
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
+    // retrieve payment to get orderId and userId for further processing
+    const retrievePaymentResult =
+      await paymentService.getPaymentById(paymentId);
+    if (
+      !retrievePaymentResult.success ||
+      !retrievePaymentResult.data?.payment
+    ) {
+      return res
+        .status(retrievePaymentResult.statusCode || 404)
+        .json(retrievePaymentResult);
+    }
+    const payment = retrievePaymentResult.data.payment;
+    if (payment.authority !== authority || authority === undefined) {
+      return res.status(400).json({
         success: false,
-        message: 'Internal server error',
+        message: 'Authority mismatch',
       });
     }
+
+    // retrieve order to ensure it exists and belongs to the user
+    const retrieveOrderResult = await orderService.getOrderById(
+      payment.orderId!.toString(),
+      payment.userId!.toString(),
+    );
+    if (!retrieveOrderResult.success || !retrieveOrderResult.data?.order) {
+      return res
+        .status(retrieveOrderResult.statusCode || 500)
+        .json(retrieveOrderResult);
+    }
+    const order = retrieveOrderResult.data.order;
+
+    // update order status to paid before verifying payment to prevent race conditions where user might try to verify payment multiple times
+    const updateOrderStatusResult = await orderService.updateStatus(
+      order._id.toString(),
+      'paid',
+    );
+
+    if (
+      !updateOrderStatusResult.success ||
+      !updateOrderStatusResult.data?.order
+    ) {
+      return res
+        .status(updateOrderStatusResult.statusCode || 500)
+        .json(updateOrderStatusResult);
+    }
+
+    // update product stock before verifying payment to prevent overselling
+    const soldItems = order.items.map((item) => ({
+      productId: item.productId.toString(),
+      quantity: item.quantity,
+    }));
+    const updateStockResult = await productService.bulkUpdateStock(soldItems);
+    if (!updateStockResult.success) {
+      return res
+        .status(updateStockResult.statusCode || 500)
+        .json(updateStockResult);
+    }
+
+    // verifying payment with the gateway
+    const verifyPaymentResult = await paymentService.verifyPayment({
+      authority: authority.toString(),
+      amount: String(payment.amount),
+    });
+
+    if (!verifyPaymentResult.success || !verifyPaymentResult.data?.payment) {
+      return res
+        .status(verifyPaymentResult.statusCode || 500)
+        .json(verifyPaymentResult);
+    }
+
+    return res
+      .status(verifyPaymentResult.statusCode || 200)
+      .json(verifyPaymentResult);
   }
 
   async cancelPayment(req: Request, res: Response): Promise<Response> {
-    try {
-      const paymentId = req.params.paymentId as string;
-
-      if (!paymentId) {
-        return res.status(400).json({
-          success: false,
-          message: 'paymentId is required',
-        });
-      }
-
-      const payment = await paymentService.cancelPayment(paymentId);
-      if (!payment) {
-        return res.status(404).json({
-          success: false,
-          message: 'Payment not found',
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        message: 'Payment cancelled successfully',
-        data: { payment },
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(400).json({
-        success: false,
-        message: (error as Error).message,
-      });
+    const paymentId = req.params.paymentId as string; // zod validated
+    const cancelPaymentResult = await paymentService.cancelPayment(paymentId);
+    if (!cancelPaymentResult.success || !cancelPaymentResult.data?.payment) {
+      return res
+        .status(cancelPaymentResult.statusCode || 404)
+        .json(cancelPaymentResult);
     }
+
+    return res
+      .status(cancelPaymentResult.statusCode || 200)
+      .json(cancelPaymentResult);
   }
 
   async checkPaymentStatus(req: Request, res: Response): Promise<Response> {
-    try {
-      const paymentId = req.params.paymentId as string;
-
-      if (!paymentId) {
-        return res.status(400).json({
-          success: false,
-          message: 'paymentId is required',
-        });
-      }
-
-      const status = await paymentService.checkPaymentStatus(paymentId);
-      if (!status) {
-        return res.status(404).json({
-          success: false,
-          message: 'Payment not found',
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        message: 'Payment status fetched successfully',
-        data: { status },
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        success: false,
-        message: 'Internal server error',
-      });
+    const paymentId = req.params.paymentId as string; // zod validated
+    const checkPaymentStatusResult =
+      await paymentService.checkPaymentStatus(paymentId);
+    if (!checkPaymentStatusResult.success || !checkPaymentStatusResult.data) {
+      return res
+        .status(checkPaymentStatusResult.statusCode || 500)
+        .json(checkPaymentStatusResult);
     }
+
+    return res
+      .status(checkPaymentStatusResult.statusCode || 200)
+      .json(checkPaymentStatusResult);
   }
 }
 

@@ -1,6 +1,6 @@
 import Category from '../../src/APIs/category/category.model.ts';
 
-export function createTestCategory(overrides = {}) {
+export async function createTestCategory(overrides = {}) {
   const defaultData = {
     title: `Test Category ${Date.now()}`,
     thumbnail: 'test.jpg',
@@ -8,5 +8,6 @@ export function createTestCategory(overrides = {}) {
     isDeleted: false,
   };
 
-  return Category.create({ ...defaultData, ...overrides });
+  const category = await Category.create({ ...defaultData, ...overrides });
+  return category;
 }

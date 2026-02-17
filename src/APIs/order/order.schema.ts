@@ -30,6 +30,3 @@ export const orderIdParamSchema = z.object({
 });
 
 export type CreateOrderInput = z.infer<typeof createOrderSchema>['body'];
-export type UpdateOrderStatusInput = z.infer<
-  typeof updateOrderStatusSchema
->['body'];

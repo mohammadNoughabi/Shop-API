@@ -5,6 +5,8 @@ import { generateTrackingNumber } from '../../src/utils/generateTrackingNumber.t
 describe('generateTrackingNumber', () => {
   it('should generate a tracking number of 10 digits', () => {
     const trackingNumber = generateTrackingNumber(10);
-    expect(String(trackingNumber)).toMatch(/^\d{10}$/);
+    const trackingNumberStr = String(trackingNumber);
+    expect(trackingNumberStr).toHaveLength(10);
+    expect(trackingNumberStr).toMatch(/^\d{10}$/);
   });
 });

@@ -27,25 +27,26 @@ export const userIdParam = z.object({
   userId: objectIdSchema,
 });
 
-export const initializeCartInput = z.object({
+export const initializeCartSchema = z.object({
   body: z.object({
-    user: objectIdSchema,
+    userId: objectIdSchema,
   }),
 });
 
-export const addCartItemInput = z.object({
+export const addCartItemSchema = z.object({
   body: z.object({
     productId: objectIdSchema,
     quantity: z.number().int().min(1).max(50).default(1),
   }),
 });
 
-export const removeCartItemInput = z.object({
+export const removeCartItemSchema = z.object({
   body: z.object({
     productId: objectIdSchema,
     quantity: z.number().int().min(1).max(50).optional(), // optional → default remove all
   }),
 });
 
-export type AddCartItemInput = z.infer<typeof addCartItemInput>['body'];
-export type RemoveCartItemInput = z.infer<typeof removeCartItemInput>['body'];
+export type InitializeCartInput = z.infer<typeof initializeCartSchema>['body'];
+export type AddCartItemInput = z.infer<typeof addCartItemSchema>['body'];
+export type RemoveCartItemInput = z.infer<typeof removeCartItemSchema>['body'];

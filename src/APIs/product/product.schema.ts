@@ -61,6 +61,9 @@ export const productIdParamSchema = z.object({
 /**
  * Types inferred from Zod
  */
-export type CreateProductInput = z.infer<typeof createProductSchema>['body'];
+export type CreateProductInput = z.infer<typeof createProductSchema>['body'] & {
+  image: string;
+  gallery: string[];
+};
 
 export type UpdateProductInput = z.infer<typeof updateProductSchema>['body'];
