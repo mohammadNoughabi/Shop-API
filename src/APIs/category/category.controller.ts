@@ -12,8 +12,10 @@ import type {
 } from './category.schema.ts';
 
 class CategoryController {
-  async getAll(_req: Request, res: Response): Promise<Response> {
-    const result = await categoryService.getAllCategories();
+  async getAll(req: Request, res: Response): Promise<Response> {
+    const includeDeleted = req.query.includeDeleted === 'true';
+
+    const result = await categoryService.getAllCategories(includeDeleted);
     if (!result.success) {
       return res.status(result.statusCode || 500).json(result);
     }
@@ -37,6 +39,14 @@ class CategoryController {
       return res.status(400).json({
         success: false,
         message: 'Thumbnail is required',
+      });
+    }
+
+    if (file.mimetype !== 'image/jpeg' && file.mimetype !== 'image/png') {
+      await removeFile(file.filename);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid thumbnail format. Only JPEG and PNG are allowed.',
       });
     }
 
@@ -90,6 +100,15 @@ class CategoryController {
   async delete(req: Request, res: Response): Promise<Response> {
     const id = req.params.id as string; // Zod validated => safe string & ObjectId format
     const result = await categoryService.deleteCategory(id);
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
+    }
+    return res.status(result.statusCode || 200).json(result);
+  }
+
+  async restore(req: Request, res: Response): Promise<Response> {
+    const id = req.params.id as string; // Zod validated => safe string & ObjectId format
+    const result = await categoryService.restoreCategory(id);
     if (!result.success) {
       return res.status(result.statusCode || 500).json(result);
     }

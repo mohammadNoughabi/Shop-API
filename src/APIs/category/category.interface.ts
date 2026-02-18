@@ -16,3 +16,4 @@ export type GetAllCategoriesResult = Result<{ categories: ICategory[] }>;
 export type CreateCategoryResult = Result<{ category: ICategory }>;
 export type UpdateCategoryResult = Result<{ category: ICategory }>;
 export type DeleteCategoryResult = Result<{ category: ICategory }>;
+export type RestoreCategoryResult = Result<{ category: ICategory }>;

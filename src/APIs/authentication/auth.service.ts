@@ -122,8 +122,8 @@ class AuthService {
     id: string,
     newPassword: string,
   ): Promise<ResetPasswordResult> {
-    const duplicateIdResult = await userService.findUserById(id);
-    if (!duplicateIdResult.success) {
+    const userFoundResult = await userService.findUserById(id);
+    if (!userFoundResult.success) {
       return {
         success: false,
         message: 'User not found',

@@ -118,7 +118,7 @@ class AuthController {
     const findUserResult = await userService.findUserByEmail(email);
 
     if (!findUserResult.success) {
-      return res.status(findUserResult.statusCode || 500).json(findUserResult);
+      return res.status(findUserResult.statusCode || 404).json(findUserResult);
     }
 
     const user = findUserResult.data!.user;

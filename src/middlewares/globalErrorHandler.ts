@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
+import { MulterError } from 'multer';
 
 const errorHandler = (
   err: Express.Error,
@@ -6,6 +7,19 @@ const errorHandler = (
   res: Response,
   next: NextFunction,
 ) => {
+  if (err instanceof MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'File too large. Maximum size is 10MB.',
+      });
+    }
+    return res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
+
   console.error('EXPRESS GLOBAL ERROR:', {
     message: err.message,
     stack: err.stack,

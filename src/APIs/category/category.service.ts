@@ -12,13 +12,16 @@ import type {
   CreateCategoryResult,
   UpdateCategoryResult,
   DeleteCategoryResult,
+  RestoreCategoryResult,
 } from './category.interface.ts';
 
 class CategoryService {
-  async getAllCategories(): Promise<GetAllCategoriesResult> {
-    const categories = await Category.find({ isDeleted: false }).catch(
-      () => null,
-    ); // ← catch and return null on any error
+  async getAllCategories(
+    includeDeleted: boolean,
+  ): Promise<GetAllCategoriesResult> {
+    const categories = await Category.find(
+      includeDeleted ? {} : { isDeleted: false },
+    ).catch(() => null); // ← catch and return null on any error
     if (!categories) {
       return {
         success: false,
@@ -35,7 +38,10 @@ class CategoryService {
   }
 
   async getCategoryById(id: string): Promise<GetCategoryByIdResult> {
-    const category = await Category.findById(id).catch(() => null); // ← catch and return null on any error
+    const category = await Category.findOne({
+      _id: id,
+      isDeleted: false,
+    }).catch(() => null); // ← catch and return null on any error
     if (!category) {
       return {
         success: false,
@@ -155,6 +161,50 @@ class CategoryService {
       message: 'Category deleted successfully',
       statusCode: 200,
       data: { category: deletedCategory },
+    };
+  }
+
+  async restoreCategory(id: string): Promise<RestoreCategoryResult> {
+    // First check if category exists at all
+    const category = await Category.findById(id).catch(() => null);
+
+    if (!category) {
+      return {
+        success: false,
+        message: 'Category not found',
+        statusCode: 404,
+      };
+    }
+
+    // Check if it's already active
+    if (!category.isDeleted) {
+      return {
+        success: false,
+        message: 'Category is not deleted',
+        statusCode: 400,
+      };
+    }
+
+    // Restore the category
+    const restoredCategory = await Category.findByIdAndUpdate(
+      id,
+      { isDeleted: false, deletedAt: null },
+      { new: true },
+    ).catch(() => null);
+
+    if (!restoredCategory) {
+      return {
+        success: false,
+        message: 'Failed to restore category',
+        statusCode: 500,
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Category restored successfully',
+      statusCode: 200,
+      data: { category: restoredCategory },
     };
   }
 }

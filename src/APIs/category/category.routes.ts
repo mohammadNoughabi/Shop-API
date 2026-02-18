@@ -52,4 +52,12 @@ categoryRouter.delete(
   categoryController.delete,
 );
 
+categoryRouter.post(
+  '/:id/restore',
+  authenticateToken,
+  authorizeRole(['admin']),
+  validate(categoryIdParamSchema),
+  categoryController.restore,
+);
+
 export default categoryRouter;
