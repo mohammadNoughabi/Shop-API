@@ -6,3 +6,4 @@ production.env
 uploads
 dist
 coverage/
+directory_tree.txt
