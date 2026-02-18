@@ -12,7 +12,7 @@ const description = z
   .min(1, 'Description is required')
   .max(2000);
 
-const price = z.string().trim().min(1, 'Price can not be empty');
+const price = z.number().int().positive('Price must be a positive number');
 
 const stock = z.number().int();
 

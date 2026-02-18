@@ -6,7 +6,7 @@ export interface IProduct extends Document {
   description: string;
   image: string;
   gallery: string[];
-  price: string;
+  price: number;
   stock: number;
   rate: number;
   category: Types.ObjectId;
