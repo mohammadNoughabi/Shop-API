@@ -9,7 +9,7 @@ export interface IProduct extends Document {
   price: number;
   stock: number;
   rate: number;
-  category: Types.ObjectId;
+  categoryId: Types.ObjectId;
   isDeleted: boolean;
   deletedAt?: Date;
   createdAt: Date;

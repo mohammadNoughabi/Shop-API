@@ -36,7 +36,9 @@ class ProductService {
   }
 
   async getProductById(id: string): Promise<GetProductByIdResult> {
-    const product = await Product.findById(id).catch(() => null);
+    const product = await Product.findOne({ _id: id, isDeleted: false }).catch(
+      () => null,
+    );
     if (!product) {
       return {
         success: false,
@@ -49,6 +51,28 @@ class ProductService {
       message: 'Product retrieved successfully',
       statusCode: 200,
       data: { product },
+    };
+  }
+
+  async getProductsByCategory(
+    categoryId: string,
+  ): Promise<GetAllProductsResult> {
+    const products = await Product.find({
+      categoryId: categoryId,
+      isDeleted: false,
+    }).catch(() => null);
+    if (!products) {
+      return {
+        success: false,
+        message: 'Failed to retrieve products for this category',
+        statusCode: 500,
+      };
+    }
+    return {
+      success: true,
+      message: 'Products retrieved successfully',
+      statusCode: 200,
+      data: { products },
     };
   }
 
@@ -67,7 +91,7 @@ class ProductService {
     // Convert category string to ObjectId
     const dataToCreate = {
       ...data,
-      category: new mongoose.Types.ObjectId(data.category),
+      categoryId: new mongoose.Types.ObjectId(data.categoryId),
     };
     const newProduct = await Product.create(dataToCreate).catch(() => null);
     if (!newProduct) {
@@ -101,10 +125,10 @@ class ProductService {
       };
     }
     let dataToUpdate;
-    if (data.category && typeof data.category === 'string') {
+    if (data.categoryId && typeof data.categoryId === 'string') {
       dataToUpdate = {
         ...data,
-        category: new mongoose.Types.ObjectId(data.category),
+        categoryId: new mongoose.Types.ObjectId(data.categoryId),
       };
     }
     const updatedProduct = await Product.findByIdAndUpdate(id, dataToUpdate, {

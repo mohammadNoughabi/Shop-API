@@ -16,7 +16,7 @@ const price = z.number().int().positive('Price must be a positive number');
 
 const stock = z.number().int();
 
-const category = z.string().trim().min(1, 'Category can not be null');
+const categoryId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category id');
 
 /**
  * CREATE
@@ -28,7 +28,7 @@ export const createProductSchema = z.object({
     description,
     price,
     stock,
-    category,
+    categoryId,
   }),
 });
 
@@ -45,7 +45,7 @@ export const updateProductSchema = z.object({
     description,
     price,
     stock,
-    category,
+    categoryId,
   }),
 });
 

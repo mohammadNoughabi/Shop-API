@@ -1,6 +1,9 @@
 // import models
 import Category from './category.model.ts';
 
+// import product service for cascade delete
+import productService from '../product/product.service.ts';
+
 // import types
 import type {
   CreateCategoryInput,
@@ -144,6 +147,20 @@ class CategoryService {
         statusCode: 404,
       };
     }
+
+    const productsInCategory = await productService.getProductsByCategory(id);
+    const products =
+      productsInCategory.success && productsInCategory.data
+        ? productsInCategory.data.products
+        : null;
+    if (products && products.length > 0) {
+      return {
+        success: false,
+        message: 'Cannot delete category with associated products',
+        statusCode: 400,
+      };
+    }
+
     const deletedCategory = await Category.findByIdAndUpdate(
       id,
       { isDeleted: true, deletedAt: new Date() },

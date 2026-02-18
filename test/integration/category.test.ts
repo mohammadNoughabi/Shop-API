@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import mongoose from 'mongoose';
 import app from '../../src/app.ts';
 import { createTestCategory } from '../helpers/category.helper.ts';
+import { createTestProduct } from '../helpers/product.helper.ts';
 import { getAdminToken, getUserToken } from '../helpers/auth.helper.ts';
 
 describe('Category API', () => {
@@ -235,6 +236,12 @@ describe('Category API', () => {
       adminToken = await getAdminToken();
     });
 
+    // Add this to clean up before each test
+    beforeEach(async () => {
+      await mongoose.connection.collection('categories').deleteMany({});
+      await mongoose.connection.collection('products').deleteMany({});
+    });
+
     it('should delete a category', async () => {
       const category = await createTestCategory();
       const res = await request(app)
@@ -262,6 +269,24 @@ describe('Category API', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 if category has associated products', async () => {
+      const category = await createTestCategory();
+      // Create a product in this category
+      await createTestProduct({
+        categoryId: category._id.toString(),
+      });
+
+      const res = await request(app)
+        .delete(`/api/category/${category._id}`)
+        .set('Cookie', adminToken);
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(
+        'Cannot delete category with associated products',
+      );
     });
   });
 
