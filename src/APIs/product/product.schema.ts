@@ -12,9 +12,9 @@ const description = z
   .min(1, 'Description is required')
   .max(2000);
 
-const price = z.number().int().positive('Price must be a positive number');
+const price = z.coerce.number().positive('Price must be a positive number');
 
-const stock = z.number().int();
+const stock = z.coerce.number();
 
 const categoryId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category id');
 
@@ -38,7 +38,7 @@ export const createProductSchema = z.object({
  */
 export const updateProductSchema = z.object({
   params: z.object({
-    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category id'),
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid product id'),
   }),
   body: z.object({
     title,
@@ -54,7 +54,7 @@ export const updateProductSchema = z.object({
  */
 export const productIdParamSchema = z.object({
   params: z.object({
-    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category id'),
+    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid product id'),
   }),
 });
 

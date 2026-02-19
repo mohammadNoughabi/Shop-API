@@ -18,8 +18,10 @@ import type {
   BulkUpdateStockResult,
 } from './product.interface.ts';
 class ProductService {
-  async getAllProducts(): Promise<GetAllProductsResult> {
-    const products = await Product.find({ isDeleted: false }).catch(() => null);
+  async getAllProducts(includeDeleted: boolean): Promise<GetAllProductsResult> {
+    const products = await Product.find({
+      isDeleted: includeDeleted ? { $in: [true, false] } : false,
+    }).catch(() => null);
     if (!products) {
       return {
         success: false,

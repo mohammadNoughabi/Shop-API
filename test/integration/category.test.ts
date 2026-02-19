@@ -42,6 +42,15 @@ describe('Category API', () => {
       expect(res.body.message).toBe('Category not found');
     });
 
+    it('should return 404 for valid ObjectId format but non-existent category', async () => {
+      const fakeId = new mongoose.Types.ObjectId().toString();
+      const res = await request(app).get(`/api/category/${fakeId}`);
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Category not found');
+    });
+
     it('should return 400 for invalid category ID', async () => {
       const res = await request(app).get('/api/category/invalid-id');
 

@@ -12,7 +12,7 @@ export async function createTestProduct(overrides = {}) {
     price: 9.99,
     stock: 1,
     rate: 2.5,
-    category: category._id,
+    categoryId: category._id,
     isDeleted: false,
   };
   const productData = { ...defaultData, ...overrides };

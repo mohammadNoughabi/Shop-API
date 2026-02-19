@@ -14,7 +14,8 @@ import type {
 
 class ProductController {
   async getAll(_req: Request, res: Response): Promise<Response> {
-    const result = await productService.getAllProducts();
+    const includeDeleted = _req.query.includeDeleted === 'true';
+    const result = await productService.getAllProducts(includeDeleted);
     if (!result.success) {
       return res.status(result.statusCode || 500).json(result);
     }
@@ -33,6 +34,25 @@ class ProductController {
   async create(req: Request, res: Response): Promise<Response> {
     const body = req.body as CreateProductInput;
     const files = req.files as ProductFiles;
+
+    // 1. Extract all uploaded files into a single flat array for validation/cleanup
+    const allFiles = [...(files.image || []), ...(files.gallery || [])];
+
+    // 2. Validate File Types (MIME types)
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    const invalidFiles = allFiles.filter(
+      (file) => !allowedTypes.includes(file.mimetype),
+    );
+
+    if (invalidFiles.length > 0) {
+      // Cleanup ALL uploaded files if even one is invalid
+      await removeFiles(allFiles.map((f) => f.filename));
+
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid file format. Only JPEG and PNG are allowed.',
+      });
+    }
 
     // Files are required — Zod can't validate multer files → we still check here
     if (!files.image?.[0]) {

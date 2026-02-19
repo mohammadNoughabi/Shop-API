@@ -78,13 +78,21 @@ The project follows a **Modular Monolith** pattern. Each domain inside `src/APIs
 Configure your `.env` files with the following keys:
 
 ```env
+NODE_ENV=development
+BASE_URL=http://localhost:3000
+CLIENT_URL=http://localhost:5173(if you run client app on port 5173. else import your client app url)
 PORT=3000
-MONGO_URI=mongodb://localhost:27017/shop
-REDIS_URL=redis://localhost:6379
+MONGO_PROTOCOL=mongodb
+MONGO_HOST=localhost
+MONGO_PORT=27017
+MONGO_DATABASE_NAME=shop-API
+EMAIL_USER=your_configured_email
+EMAIL_PASS=your_email_App_password
 ACCESS_TOKEN_SECRET=your_jwt_secret
 REFRESH_TOKEN_SECRET=your_refresh_secret
 SESSION_SECRET=strong_session_secret
 ZARINPAL_MERCHANT_ID=your_id
+REDIS_URL=redis://localhost:6379
 ```
 
 ### Running the API
