@@ -57,7 +57,7 @@ The project follows a **Modular Monolith** pattern. Each domain inside `src/APIs
 1. **Clone the repository:**
 
    ```bash
-   git clone [https://github.com/mohammadNoughabi/Shop-API.git](https://github.com/mohammadNoughabi/Shop-API.git)
+   git clone https://github.com/mohammadNoughabi/Shop-API.git
    ```
 
 2. **Install dependencies:**
