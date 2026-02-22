@@ -4,7 +4,7 @@ import type { TicketStatus } from './ticket.constants.ts';
 import type { Result } from '../../types/serviceResult/index.d.ts';
 
 export interface ITicket {
-  _id: Types.ObjectId;
+  id: string;
   title: string;
   description: string; // The initial issue description
   status: TicketStatus;
@@ -15,7 +15,7 @@ export interface ITicket {
 }
 
 export interface ITicketMessage {
-  _id: Types.ObjectId;
+  id: string;
   ticketId: Types.ObjectId; // Reference to the parent ticket
   senderId: Types.ObjectId; // Reference to the User (customer or staff)
   message: string;

@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 import Ticket, { TicketMessage } from './ticket.model.ts';
 import userService from '../user/user.service.ts';
 
@@ -15,7 +16,7 @@ import type { TicketStatus } from './ticket.constants.ts';
 
 class TicketService {
   async getTicketById(ticketId: string): Promise<GetTicketByIdResult> {
-    const ticket = await Ticket.findById(ticketId)
+    const ticket = await Ticket.findOne({ id: ticketId })
       .populate('userId', 'username email') // Populate user details (username and email)
       .populate({
         path: 'messages',
@@ -80,8 +81,10 @@ class TicketService {
 
   async createTicket(data: CreateTicketData): Promise<CreateTicketResult> {
     const { title, description, userId } = data;
+    const id = uuidv4();
 
     const ticket = new Ticket({
+      id,
       title,
       description,
       userId,
@@ -107,7 +110,7 @@ class TicketService {
 
   async addMessage(data: AddMessageData): Promise<AddMessageResult> {
     const { ticketId, senderId, message, attachments } = data;
-    const ticket = await Ticket.findById(ticketId).catch(() => null);
+    const ticket = await Ticket.findOne({ id: ticketId }).catch(() => null);
 
     if (!ticket) {
       return {
@@ -118,6 +121,7 @@ class TicketService {
     }
 
     const newMessage = new TicketMessage({
+      id: uuidv4(),
       ticketId: new Types.ObjectId(ticketId),
       senderId,
       message,
@@ -146,7 +150,7 @@ class TicketService {
     ticketId: string,
     status: TicketStatus,
   ): Promise<boolean> {
-    const ticket = await Ticket.findById(ticketId).catch(() => null);
+    const ticket = await Ticket.findOne({ id: ticketId }).catch(() => null);
     if (!ticket) {
       return false;
     }
@@ -156,7 +160,7 @@ class TicketService {
   }
 
   async closeTicket(ticketId: string): Promise<CloseTicketResult> {
-    const ticket = await Ticket.findById(ticketId).catch(() => null);
+    const ticket = await Ticket.findOne({ id: ticketId }).catch(() => null);
     if (!ticket) {
       return {
         success: false,

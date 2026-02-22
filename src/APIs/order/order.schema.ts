@@ -1,4 +1,18 @@
-import { z } from 'zod';
+import { z, uuidv4 } from 'zod';
+
+export const orderIdParamSchema = z.object({
+  params: z.object({
+    id: uuidv4(),
+  }),
+});
+
+export const getOrdersSchema = z.object({
+  query: z.object({
+    status: z
+      .enum(['pending', 'paid', 'shipped', 'delivered', 'canceled'])
+      .optional(),
+  }),
+});
 
 export const createOrderSchema = z.object({
   body: z.object({
@@ -19,14 +33,8 @@ export const updateOrderStatusSchema = z.object({
   }),
 });
 
-export const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, {
-  message: 'Invalid MongoDB ObjectId format',
-});
-
-export const orderIdParamSchema = z.object({
-  params: z.object({
-    id: objectIdSchema,
-  }),
-});
-
 export type CreateOrderInput = z.infer<typeof createOrderSchema>['body'];
+export type UpdateOrderStatusInput = z.infer<
+  typeof updateOrderStatusSchema
+>['body'];
+export type GetOrdersInput = z.infer<typeof getOrdersSchema>['query'];

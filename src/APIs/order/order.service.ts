@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 import Order from './order.model.ts';
 import Cart from '../cart/cart.model.ts';
 import { generateTrackingNumber } from '../../utils/generateTrackingNumber.ts';
@@ -43,6 +44,7 @@ class OrderService {
 
     // 3. Create order from cart snapshot
     const orderItems = cart.items.map((item) => ({
+      id: uuidv4(),
       productId: item.productId,
       quantity: item.quantity,
       price: item.price,
@@ -54,6 +56,7 @@ class OrderService {
     );
 
     const order = await Order.create({
+      id: uuidv4(),
       userId: userObjectId,
       items: orderItems,
       total,
@@ -105,7 +108,7 @@ class OrderService {
     userId: string,
   ): Promise<GetOrderByIdResult> {
     const order = await Order.findOne({
-      _id: orderId,
+      id: orderId,
       userId: new Types.ObjectId(userId),
       isDeleted: false,
     }).populate('items.productId', 'name price image'); // adjust fields
@@ -128,7 +131,7 @@ class OrderService {
     orderId: string,
     newStatus: OrderStatus,
   ): Promise<UpdateOrderStatusResult> {
-    const order = await Order.findOne({ _id: orderId, isDeleted: false });
+    const order = await Order.findOne({ id: orderId, isDeleted: false });
     if (!order)
       return { success: false, message: 'Order not found', statusCode: 404 };
 
@@ -160,7 +163,7 @@ class OrderService {
     userId: string,
   ): Promise<CancelOrderResult> {
     const order = await Order.findOne({
-      _id: orderId,
+      id: orderId,
       userId: new Types.ObjectId(userId),
       isDeleted: false,
     });
@@ -197,7 +200,7 @@ class OrderService {
     userId: string,
   ): Promise<SoftDeleteOrderResult> {
     const order = await Order.findOne({
-      _id: orderId,
+      id: orderId,
       userId: new Types.ObjectId(userId),
       isDeleted: false,
     });

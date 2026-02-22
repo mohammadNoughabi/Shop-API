@@ -1,4 +1,5 @@
 import User from './user.model.ts';
+import { v4 as uuidv4 } from 'uuid';
 
 import type {
   FindByIdResult,
@@ -13,9 +14,7 @@ import type { CreateUserInput, UpdatePasswordInput } from './user.schema.ts';
 
 class UserService {
   async findUserById(id: string): Promise<FindByIdResult> {
-    const user = await User.findOne({ _id: id, isDeleted: false }).catch(
-      () => null,
-    );
+    const user = await User.findOne({ id, isDeleted: false }).catch(() => null);
     if (!user) {
       return {
         success: false,
@@ -71,7 +70,7 @@ class UserService {
 
   async getUserProfile(id: string): Promise<GetProfileResult> {
     const existingUser = await User.findOne({
-      _id: id,
+      id,
       isDeleted: false,
     }).catch(() => null);
     if (!existingUser) {
@@ -91,6 +90,7 @@ class UserService {
 
   async createUser(data: CreateUserInput): Promise<CreateUserResult> {
     const { username, email, password } = data;
+    const id = uuidv4();
     const existingUser = await User.findOne({ email, isDeleted: false }).catch(
       () => null,
     );
@@ -101,7 +101,7 @@ class UserService {
         statusCode: 400,
       };
     }
-    const newUser = await User.create({ username, email, password }).catch(
+    const newUser = await User.create({ id, username, email, password }).catch(
       () => null,
     );
     if (!newUser) {
@@ -124,7 +124,7 @@ class UserService {
   ): Promise<UpdatePasswordResult> {
     const { id, newPassword } = data;
     const existingUser = await User.findOne({
-      _id: id,
+      id,
       isDeleted: false,
     }).catch(() => null);
     if (!existingUser) {
@@ -153,7 +153,7 @@ class UserService {
 
   async deleteUserAccount(id: string): Promise<DeleteAccountResult> {
     const existingUser = await User.findOne({
-      _id: id,
+      id,
       isDeleted: false,
     }).catch(() => null);
     if (!existingUser) {
@@ -163,8 +163,8 @@ class UserService {
         statusCode: 404,
       };
     }
-    const deletedUser = await User.findByIdAndUpdate(
-      id,
+    const deletedUser = await User.findOneAndUpdate(
+      { id, isDeleted: false },
       { isDeleted: true, deletedAt: new Date() },
       { new: true },
     ).catch(() => null);

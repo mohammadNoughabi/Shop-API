@@ -1,5 +1,6 @@
 // packages
 import mongoose from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 // models
 import Product from './product.model.ts';
@@ -38,7 +39,7 @@ class ProductService {
   }
 
   async getProductById(id: string): Promise<GetProductByIdResult> {
-    const product = await Product.findOne({ _id: id, isDeleted: false }).catch(
+    const product = await Product.findOne({ id, isDeleted: false }).catch(
       () => null,
     );
     if (!product) {
@@ -90,10 +91,11 @@ class ProductService {
         statusCode: 400,
       };
     }
-    // Convert category string to ObjectId
+
     const dataToCreate = {
       ...data,
-      categoryId: new mongoose.Types.ObjectId(data.categoryId),
+      id: uuidv4(), // generate UUID for id
+      categoryId: new mongoose.Types.ObjectId(data.categoryId), // Convert category string to ObjectId
     };
     const newProduct = await Product.create(dataToCreate).catch(() => null);
     if (!newProduct) {
@@ -116,7 +118,7 @@ class ProductService {
     data: UpdateProductInput,
   ): Promise<UpdateProductResult> {
     const existingProduct = await Product.findOne({
-      _id: id,
+      id,
       isDeleted: false,
     }).catch(() => null);
     if (!existingProduct) {
@@ -126,16 +128,36 @@ class ProductService {
         statusCode: 404,
       };
     }
-    let dataToUpdate;
-    if (data.categoryId && typeof data.categoryId === 'string') {
-      dataToUpdate = {
-        ...data,
-        categoryId: new mongoose.Types.ObjectId(data.categoryId),
+
+    const duplicateTitle = await Product.findOne({
+      title: data.title,
+      id: { $ne: id },
+      isDeleted: false,
+    }).catch(() => null);
+    if (duplicateTitle && data.title) {
+      // ← only check if title is actually being updated
+      return {
+        success: false,
+        message: 'Another product with this title already exists',
+        statusCode: 400,
       };
     }
-    const updatedProduct = await Product.findByIdAndUpdate(id, dataToUpdate, {
-      new: true,
-    }).catch(() => null);
+
+    // Start with the incoming data (which may be partial)
+    const dataToUpdate = { ...data };
+
+    // Only convert if categoryId is being updated in this request
+    if (data.categoryId && typeof data.categoryId === 'string') {
+      dataToUpdate.categoryId = data.categoryId;
+    }
+
+    // If nothing to update (empty object), you could early-return, but mongoose handles it fine
+    const updatedProduct = await Product.findOneAndUpdate(
+      { id, isDeleted: false },
+      dataToUpdate, // ← now always defined (even if {})
+      { new: true, runValidators: true }, // ← runValidators good for price/stock etc.
+    ).catch(() => null);
+
     if (!updatedProduct) {
       return {
         success: false,
@@ -143,6 +165,7 @@ class ProductService {
         statusCode: 404,
       };
     }
+
     return {
       success: true,
       message: 'Product updated successfully',
@@ -153,7 +176,7 @@ class ProductService {
 
   async deleteProduct(id: string): Promise<DeleteProductResult> {
     const existingProduct = await Product.findOne({
-      _id: id,
+      id,
       isDeleted: false,
     }).catch(() => null);
     if (!existingProduct) {
@@ -163,8 +186,8 @@ class ProductService {
         statusCode: 404,
       };
     }
-    const deletedProduct = await Product.findByIdAndUpdate(
-      id,
+    const deletedProduct = await Product.findOneAndUpdate(
+      { id, isDeleted: false },
       { isDeleted: true, deletedAt: new Date() },
       { new: true },
     ).catch(() => null);
@@ -188,7 +211,7 @@ class ProductService {
   ): Promise<BulkUpdateStockResult> {
     const bulkOps = soldItems.map((item) => ({
       updateOne: {
-        filter: { _id: item.productId, isDeleted: false },
+        filter: { id: item.productId, isDeleted: false },
         update: { $inc: { stock: -item.quantity } },
       },
     }));

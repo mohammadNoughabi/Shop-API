@@ -5,6 +5,11 @@ import { PAYMENT_STATUSES } from './payment.constants.ts';
 
 const paymentSchema = new mongoose.Schema<IPayment>(
   {
+    id: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     amount: {
       type: Number,
       required: true,

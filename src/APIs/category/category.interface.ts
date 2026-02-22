@@ -2,6 +2,7 @@ import type { Document } from 'mongoose';
 import type { Result } from '../../types/serviceResult/index.d.ts';
 
 export interface ICategory extends Document {
+  id: string;
   title: string;
   thumbnail: string;
   description: string;

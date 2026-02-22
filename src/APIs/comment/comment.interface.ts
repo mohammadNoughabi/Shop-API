@@ -2,6 +2,7 @@ import type { Types, Document } from 'mongoose';
 import type { Result } from '../../types/serviceResult/index.d.ts';
 
 export interface IComment extends Document {
+  id: string;
   content: string;
   productId: Types.ObjectId;
   userId: Types.ObjectId;

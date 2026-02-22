@@ -5,7 +5,7 @@ import type { Request, Response } from 'express';
 
 class UserController {
   async getProfile(req: Request, res: Response): Promise<Response> {
-    const id = req.params.id as string;
+    const id = req.user.id as string;
     const result = await userService.getUserProfile(id);
     if (!result.success) {
       return res.status(result.statusCode || 500).json(result);
@@ -23,7 +23,7 @@ class UserController {
   }
 
   async updatePassword(req: Request, res: Response): Promise<Response> {
-    const id = req.params.id as string;
+    const id = req.user.id as string;
     const { newPassword } = req.body as { newPassword: string };
     const result = await userService.updateUserPassword({ id, newPassword });
     if (!result.success) {
@@ -33,7 +33,7 @@ class UserController {
   }
 
   async deleteAccount(req: Request, res: Response): Promise<Response> {
-    const id = req.params.id as string;
+    const id = req.user.id as string;
     const result = await userService.deleteUserAccount(id);
     if (!result.success) {
       return res.status(result.statusCode || 500).json(result);

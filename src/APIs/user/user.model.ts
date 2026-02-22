@@ -5,6 +5,11 @@ import type { IUser } from './user.interface.ts';
 
 const userSchema = new mongoose.Schema<IUser>(
   {
+    id: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     username: {
       type: String,
       required: [true, 'username is required'],

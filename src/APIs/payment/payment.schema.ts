@@ -1,8 +1,4 @@
-import { z } from 'zod';
-
-export const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, {
-  message: 'Invalid MongoDB ObjectId format',
-});
+import { z, uuidv4 } from 'zod';
 
 export const createPaymentSchema = z.object({
   body: z.object({
@@ -16,13 +12,13 @@ export const createPaymentSchema = z.object({
       .optional(),
   }),
   query: z.object({
-    orderId: objectIdSchema,
+    orderId: uuidv4(),
   }),
 });
 
 export const initializePaymentSchema = z.object({
   params: z.object({
-    paymentId: objectIdSchema,
+    paymentId: uuidv4(),
   }),
   query: z.object({
     callbackUrl: z.url('Invalid callback URL'),
@@ -38,7 +34,7 @@ export const verifyPaymentSchema = z.object({
 
 export const cancelPaymentSchema = z.object({
   params: z.object({
-    paymentId: objectIdSchema,
+    paymentId: uuidv4(),
   }),
 });
 

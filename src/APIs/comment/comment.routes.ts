@@ -20,25 +20,25 @@ commentRouter.post(
   commentController.submit,
 );
 commentRouter.post(
-  '/like/:id',
+  '/like/',
   authenticateToken,
   validate(doLikeSchema),
   commentController.doLike,
 );
 commentRouter.post(
-  '/dislike/:id',
+  '/dislike/',
   authenticateToken,
   validate(doDislikeSchema),
   commentController.doDislike,
 );
 commentRouter.post(
-  '/undo-like/:id',
+  '/undo-like/',
   authenticateToken,
   validate(undoLikeSchema),
   commentController.undoLike,
 );
 commentRouter.post(
-  '/undo-dislike/:id',
+  '/undo-dislike/',
   authenticateToken,
   validate(undoDislikeSchema),
   commentController.undoDislike,

@@ -15,6 +15,7 @@ interface MetaData {
 
 // Payment Entity Interface
 export interface IPayment extends Document {
+  id: string;
   amount: number;
   description: string;
   status: PaymentStatus;
@@ -36,7 +37,6 @@ export type CreatePaymentData = CreatePaymentInput & {
   userId: Types.ObjectId;
   orderId: Types.ObjectId;
 };
-
 export type InitializePaymentData = InitializePaymentInput;
 export type VerifyPaymentData = VerifyPaymentInput;
 

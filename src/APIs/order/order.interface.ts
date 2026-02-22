@@ -3,12 +3,14 @@ import type { Result } from '../../types/serviceResult/index.d.ts';
 import type { OrderStatus } from './order.constants.ts';
 
 export interface IOrderItem {
+  id: string;
   productId: Types.ObjectId;
   quantity: number;
   price: number;
 }
 
 export interface IOrder extends Document {
+  id: string;
   items: IOrderItem[];
   total: number;
   address: string;

@@ -8,6 +8,11 @@ import type { ITicket, ITicketMessage } from './ticket.interface.ts';
  */
 const ticketMessageSchema = new Schema<ITicketMessage>(
   {
+    id: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     ticketId: {
       type: Schema.Types.ObjectId,
       ref: 'Ticket',
@@ -39,6 +44,11 @@ const ticketMessageSchema = new Schema<ITicketMessage>(
  */
 const ticketSchema = new Schema<ITicket>(
   {
+    id: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     title: {
       type: String,
       required: true,

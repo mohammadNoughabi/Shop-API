@@ -1,22 +1,27 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-import type { Schema } from "mongoose";
+import type { Schema } from 'mongoose';
 
-import type { ICategory } from "./category.interface.ts";
+import type { ICategory } from './category.interface.ts';
 
 const categorySchema: Schema = new mongoose.Schema<ICategory>(
   {
+    id: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     title: {
       type: String,
-      required: [true, "Title is required to create new Category"],
+      required: [true, 'Title is required to create new Category'],
     },
     thumbnail: {
       type: String,
-      default: "",
+      default: '',
     },
     description: {
       type: String,
-      default: "",
+      default: '',
     },
     isDeleted: {
       type: Boolean,
@@ -32,6 +37,6 @@ const categorySchema: Schema = new mongoose.Schema<ICategory>(
   },
 );
 
-const Category = mongoose.model<ICategory>("Category", categorySchema);
+const Category = mongoose.model<ICategory>('Category', categorySchema);
 
 export default Category;

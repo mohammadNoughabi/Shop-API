@@ -1,16 +1,12 @@
-import { z } from 'zod';
+import { z, uuidv4 } from 'zod';
 
 const usernameSchema = z.string().trim().min(5).max(50);
-const emailSchema = z.string().trim().email().optional();
+const emailSchema = z.string().trim().pipe(z.email()).optional();
 const passwordSchema = z.string().trim().min(8);
-
-const objectIdSchema = z
-  .string()
-  .regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId format');
 
 export const userIdParamSchema = z.object({
   params: z.object({
-    id: objectIdSchema,
+    id: uuidv4(),
   }),
 });
 
@@ -25,7 +21,7 @@ export type CreateUserInput = z.infer<typeof createUserSchema>['body'];
 
 export const updatePasswordSchema = z.object({
   params: z.object({
-    id: objectIdSchema,
+    id: uuidv4(),
   }),
   body: z.object({
     newPassword: passwordSchema,

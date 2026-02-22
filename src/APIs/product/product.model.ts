@@ -4,6 +4,11 @@ import type { IProduct } from './product.interface.ts';
 
 const productSchema = new mongoose.Schema<IProduct>(
   {
+    id: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     title: {
       type: String,
       required: [true, 'Title is required'],

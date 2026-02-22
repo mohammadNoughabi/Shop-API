@@ -2,12 +2,14 @@ import type { Document, Types } from 'mongoose';
 import type { Result } from '../../types/serviceResult/index.d.ts';
 
 export interface ICartItem {
+  id: string;
   productId: Types.ObjectId;
   price: number;
   quantity: number;
 }
 
 export interface ICart extends Document {
+  id: string;
   userId: Types.ObjectId;
   items: ICartItem[];
   totalAmount: number;

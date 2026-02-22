@@ -2,6 +2,7 @@ import type { Document, Schema } from 'mongoose';
 import type { Result } from '../../types/serviceResult/index.d.ts';
 
 export interface IUser extends Document {
+  id: string;
   username: string;
   email?: string;
   password: string;

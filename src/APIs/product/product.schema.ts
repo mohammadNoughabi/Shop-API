@@ -16,7 +16,10 @@ const price = z.coerce.number().positive('Price must be a positive number');
 
 const stock = z.coerce.number();
 
-const categoryId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category id');
+const uuidSchema = z
+  .string()
+  .uuid()
+  .regex(/^[0-9a-fA-F]{24}$/, 'Invalid UUID format');
 
 /**
  * CREATE
@@ -28,7 +31,7 @@ export const createProductSchema = z.object({
     description,
     price,
     stock,
-    categoryId,
+    categoryId: uuidSchema,
   }),
 });
 
@@ -38,14 +41,14 @@ export const createProductSchema = z.object({
  */
 export const updateProductSchema = z.object({
   params: z.object({
-    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid product id'),
+    id: uuidSchema,
   }),
   body: z.object({
-    title,
-    description,
-    price,
-    stock,
-    categoryId,
+    title: title.optional(),
+    description: description.optional(),
+    price: price.optional(),
+    stock: stock.optional(),
+    categoryId: uuidSchema.optional(),
   }),
 });
 
@@ -54,7 +57,7 @@ export const updateProductSchema = z.object({
  */
 export const productIdParamSchema = z.object({
   params: z.object({
-    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid product id'),
+    id: uuidSchema,
   }),
 });
 
@@ -62,8 +65,12 @@ export const productIdParamSchema = z.object({
  * Types inferred from Zod
  */
 export type CreateProductInput = z.infer<typeof createProductSchema>['body'] & {
+  id: typeof uuidSchema;
   image: string;
   gallery: string[];
 };
 
-export type UpdateProductInput = z.infer<typeof updateProductSchema>['body'];
+export type UpdateProductInput = z.infer<typeof updateProductSchema>['body'] & {
+  image?: string;
+  gallery?: string[];
+};

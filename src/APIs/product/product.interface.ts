@@ -2,6 +2,7 @@ import type { Document, Types } from 'mongoose';
 import type { Result } from '../../types/serviceResult/index.d.ts';
 
 export interface IProduct extends Document {
+  id: string;
   title: string;
   description: string;
   image: string;

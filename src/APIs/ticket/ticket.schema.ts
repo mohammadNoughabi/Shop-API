@@ -1,18 +1,14 @@
-import { z } from 'zod';
-
-const objectIdSchema = z
-  .string()
-  .regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId format');
+import { z, uuidv4 } from 'zod';
 
 export const getTicketByIdSchema = z.object({
   params: z.object({
-    id: objectIdSchema,
+    id: uuidv4(),
   }),
 });
 
 export const getUserTicketsSchema = z.object({
   params: z.object({
-    userId: objectIdSchema,
+    userId: uuidv4(),
   }),
 });
 
@@ -26,7 +22,7 @@ export const createTicketSchema = z.object({
 
 export const addMessageSchema = z.object({
   body: z.object({
-    ticketId: objectIdSchema,
+    ticketId: uuidv4(),
     message: z.string().min(1),
     attachments: z.array(z.string().url()).optional(),
   }),
@@ -34,6 +30,6 @@ export const addMessageSchema = z.object({
 
 export const closeTicketSchema = z.object({
   params: z.object({
-    id: objectIdSchema,
+    id: uuidv4(),
   }),
 });

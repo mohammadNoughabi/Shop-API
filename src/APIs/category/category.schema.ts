@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z, uuidv4 } from 'zod';
 
 const title = z
   .string()
@@ -29,7 +29,7 @@ export const createCategorySchema = z.object({
  */
 export const updateCategorySchema = z.object({
   params: z.object({
-    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category id'),
+    id: uuidv4(),
   }),
   body: z.object({
     title: title.optional(),
@@ -42,7 +42,7 @@ export const updateCategorySchema = z.object({
  */
 export const categoryIdParamSchema = z.object({
   params: z.object({
-    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category id'),
+    id: uuidv4(),
   }),
 });
 

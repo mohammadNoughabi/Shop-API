@@ -143,5 +143,86 @@ describe('Product API', () => {
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
     });
+
+    it('should fail if product with the same title already exists', async () => {
+      const category = await createTestCategory();
+      const categoryId = category._id.toString();
+
+      // First, create a product with a specific title
+      await request(app)
+        .post('/api/product')
+        .set('Cookie', adminToken)
+        .field('title', 'Duplicate Title Product')
+        .field('description', 'First product with this title')
+        .field('price', 9.99)
+        .field('stock', 20)
+        .field('categoryId', categoryId)
+        .attach('image', Buffer.from('fake image content'), 'test-image.jpg')
+        .attach('gallery', Buffer.from('fake gallery image'), 'gallery1.jpg');
+
+      // Attempt to create another product with the same title
+      const res = await request(app)
+        .post('/api/product')
+        .set('Cookie', adminToken)
+        .field('title', 'Duplicate Title Product') // same title as before
+        .field('description', 'Second product with duplicate title')
+        .field('price', 19.99)
+        .field('stock', 30)
+        .field('categoryId', categoryId)
+        .attach('image', Buffer.from('fake image content'), 'test-image.jpg')
+        .attach('gallery', Buffer.from('fake gallery image'), 'gallery1.jpg');
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Product with this title already exists');
+    });
+  });
+
+  // ===========================================
+  // UPDATE PRODUCT
+  // ===========================================
+  describe('Put /api/product/:id', () => {
+    let adminToken: string;
+
+    beforeAll(async () => {
+      adminToken = await getAdminToken();
+    });
+
+    it('should return 404 for non-existent product', async () => {
+      const fakeId = new Types.ObjectId().toString();
+      const res = await request(app)
+        .put(`/api/product/${fakeId}`)
+        .set('Cookie', adminToken)
+        .field('title', 'Updated Title')
+        .field('categoryId', new Types.ObjectId().toString());
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 404 if product is deleted', async () => {
+      const product = await createTestProduct({ isDeleted: true });
+      const res = await request(app)
+        .put(`/api/product/${product._id}`)
+        .set('Cookie', adminToken)
+        .field('title', 'Updated Title')
+        .field('categoryId', new Types.ObjectId().toString());
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should update an existing product title', async () => {
+      const product = await createTestProduct();
+      const res = await request(app)
+        .put(`/api/product/${product._id}`)
+        .set('Cookie', adminToken)
+        .field('title', 'Updated Product Title')
+        .field('categoryId', product.categoryId.toString());
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.product.title).toBe('Updated Product Title');
+    });
   });
 });

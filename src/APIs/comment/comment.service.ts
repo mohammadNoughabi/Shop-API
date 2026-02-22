@@ -43,7 +43,7 @@ class CommentService {
     const { commentId, userId } = data;
     const userObjId = new Types.ObjectId(userId);
 
-    const comment = await Comment.findById(commentId);
+    const comment = await Comment.findOne({ id: commentId });
     if (!comment) {
       return { success: false, message: 'Comment not found', statusCode: 404 };
     }
@@ -78,7 +78,7 @@ class CommentService {
     const { commentId, userId } = data;
     const userObjId = new Types.ObjectId(userId);
 
-    const comment = await Comment.findById(commentId);
+    const comment = await Comment.findOne({ id: commentId });
     if (!comment) {
       return { success: false, message: 'Comment not found', statusCode: 404 };
     }
@@ -112,7 +112,7 @@ class CommentService {
     const { commentId, userId } = data;
     const userObjId = new Types.ObjectId(userId);
 
-    const comment = await Comment.findById(commentId);
+    const comment = await Comment.findOne({ id: commentId });
     if (!comment) {
       return { success: false, message: 'Comment not found', statusCode: 404 };
     }
@@ -143,7 +143,7 @@ class CommentService {
     const { commentId, userId } = data;
     const userObjId = new Types.ObjectId(userId);
 
-    const comment = await Comment.findById(commentId);
+    const comment = await Comment.findOne({ id: commentId });
     if (!comment) {
       return { success: false, message: 'Comment not found', statusCode: 404 };
     }

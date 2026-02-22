@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 import type {
   CreatePaymentData,
   InitializePaymentData,
@@ -35,7 +37,7 @@ class PaymentService {
   }
 
   async getPaymentById(id: string): Promise<GetPaymentByIdResult> {
-    const existingPayment = await Payment.findById(id).catch(() => null);
+    const existingPayment = await Payment.findOne({ id }).catch(() => null);
     if (!existingPayment) {
       return {
         success: false,
@@ -67,6 +69,7 @@ class PaymentService {
     const order = result.data.order;
     const amount = order.total;
     const payment = await Payment.create({
+      id: uuidv4(),
       amount,
       description: metadata.description || `Payment for order ${orderId}`,
       userId,
@@ -92,7 +95,9 @@ class PaymentService {
   async initializePayment(
     data: InitializePaymentData,
   ): Promise<InitializePaymentResult> {
-    const payment = await Payment.findById(data.paymentId).catch(() => null);
+    const payment = await Payment.findOne({ id: data.paymentId }).catch(
+      () => null,
+    );
     if (!payment)
       return {
         success: false,
@@ -220,7 +225,7 @@ class PaymentService {
   }
 
   async cancelPayment(paymentId: string): Promise<CancelPaymentResult> {
-    const payment = await Payment.findById(paymentId).catch(() => null);
+    const payment = await Payment.findOne({ id: paymentId }).catch(() => null);
     if (!payment)
       return {
         success: false,
@@ -254,7 +259,7 @@ class PaymentService {
   async checkPaymentStatus(
     paymentId: string,
   ): Promise<CheckPaymentStatusResult> {
-    const payment = await Payment.findById(paymentId).select('status');
+    const payment = await Payment.findOne({ id: paymentId }).select('status');
     if (!payment) {
       return {
         success: false,

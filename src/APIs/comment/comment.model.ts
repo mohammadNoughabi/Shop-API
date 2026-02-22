@@ -3,6 +3,11 @@ import { Types } from 'mongoose';
 import type { IComment } from './comment.interface.ts';
 
 const commentSchema = new mongoose.Schema<IComment>({
+  id: {
+    type: String,
+    required: true,
+    unique: true,
+  },
   content: {
     type: String,
     required: true,

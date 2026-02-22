@@ -87,19 +87,28 @@ class ProductController {
     let image: string | undefined;
     let gallery: string[] | undefined;
 
-    if (files.image?.[0]) {
-      image = files.image[0].filename;
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (files) {
+      if (files.image?.[0]) {
+        image = files.image[0].filename;
+      }
+      if (files.gallery?.length) {
+        gallery = files.gallery.map((f) => f.filename);
+      }
     }
 
-    if (files.gallery?.length) {
-      gallery = files.gallery.map((f) => f.filename);
-    }
-
-    const result = await productService.updateProduct(id, {
+    const updateData: UpdateProductInput = {
       ...body,
-      ...(image !== undefined && { image }),
-      ...(gallery !== undefined && { gallery }),
-    });
+    };
+
+    if (image !== undefined) {
+      updateData.image = image;
+    }
+    if (gallery !== undefined) {
+      updateData.gallery = gallery;
+    }
+
+    const result = await productService.updateProduct(id, updateData);
 
     // Cleanup only new files if business logic rejected update
     if (!result.success && (image || gallery)) {

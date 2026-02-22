@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 import Cart from './cart.model.ts';
 import productService from '../product/product.service.ts';
 import type {
@@ -46,6 +47,7 @@ class CartService {
     }
 
     const cart = await Cart.create({
+      id: uuidv4(),
       userId: new Types.ObjectId(userId),
       items: [],
       totalAmount: 0,
@@ -59,9 +61,7 @@ class CartService {
     };
   }
 
-  async addCartItem(
-    data: AddCartItemInput & { userId: string },
-  ): Promise<AddCartItemResult> {
+  async addCartItem(data: AddCartItemInput): Promise<AddCartItemResult> {
     const { userId, productId, quantity } = data;
 
     const findProductResult = await productService.getProductById(productId);
@@ -114,6 +114,7 @@ class CartService {
 
     // Item did not exist → push new one
     const newItem: ICartItem = {
+      id: uuidv4(),
       productId: productObjectId,
       price,
       quantity,
@@ -151,7 +152,7 @@ class CartService {
   }
 
   async removeCartItem(
-    data: RemoveCartItemInput & { userId: string },
+    data: RemoveCartItemInput,
   ): Promise<RemoveCartItemResult> {
     const { userId, productId, quantity = Infinity } = data;
 

@@ -4,6 +4,7 @@ import { ORDER_STATUSES } from './order.constants.ts';
 
 const orderItemSchema = new mongoose.Schema(
   {
+    id: { type: String, required: true },
     productId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Product',
@@ -17,6 +18,7 @@ const orderItemSchema = new mongoose.Schema(
 
 const orderSchema = new mongoose.Schema<IOrder>(
   {
+    id: { type: String, required: true },
     items: { type: [orderItemSchema], required: true },
     total: { type: Number, required: true, min: 0 },
     address: { type: String, required: true },
