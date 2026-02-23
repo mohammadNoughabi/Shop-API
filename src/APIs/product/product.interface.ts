@@ -4,6 +4,7 @@ import type { Result } from '../../types/serviceResult/index.d.ts';
 export interface IProduct extends Document {
   id: string;
   title: string;
+  slug: string;
   description: string;
   image: string;
   gallery: string[];
@@ -24,6 +25,7 @@ export interface ProductFiles {
 }
 
 export type GetProductByIdResult = Result<{ product: IProduct }>;
+export type GetProductBySlugResult = Result<{ product: IProduct }>;
 export type GetAllProductsResult = Result<{ products: IProduct[] }>;
 export type CreateProductResult = Result<{ product: IProduct }>;
 export type UpdateProductResult = Result<{ product: IProduct }>;

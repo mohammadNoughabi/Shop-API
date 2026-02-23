@@ -11,6 +11,7 @@ import {
   createProductSchema,
   updateProductSchema,
   productIdParamSchema,
+  productSlugParamSchema,
 } from './product.schema.ts';
 
 // controllers
@@ -19,7 +20,16 @@ import productController from './product.controller.ts';
 const productRouter = express.Router();
 
 productRouter.get('/', productController.getAll);
-productRouter.get('/:id', productController.getById);
+productRouter.get(
+  '/:id',
+  validate(productIdParamSchema),
+  productController.getById,
+);
+productRouter.get(
+  '/slug/:slug',
+  validate(productSlugParamSchema),
+  productController.getBySlug,
+);
 productRouter.post(
   '/',
   authenticateToken,

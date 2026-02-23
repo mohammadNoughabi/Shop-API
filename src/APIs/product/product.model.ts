@@ -14,6 +14,11 @@ const productSchema = new mongoose.Schema<IProduct>(
       required: [true, 'Title is required'],
       unique: [true, 'Product with this name already exists'],
     },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     description: {
       type: String,
       required: [true, 'Description is required'],

@@ -15,6 +15,11 @@ const categorySchema: Schema = new mongoose.Schema<ICategory>(
       type: String,
       required: [true, 'Title is required to create new Category'],
     },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     thumbnail: {
       type: String,
       default: '',

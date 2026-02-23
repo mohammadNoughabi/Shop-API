@@ -5,6 +5,9 @@ import { v4 as uuidv4 } from 'uuid';
 // models
 import Product from './product.model.ts';
 
+// helpers
+import generateUniqueSlug from '../../helpers/generateUniqueSlug.ts';
+
 // types
 import type {
   CreateProductInput,
@@ -12,6 +15,7 @@ import type {
 } from './product.schema.ts';
 import type {
   GetProductByIdResult,
+  GetProductBySlugResult,
   GetAllProductsResult,
   CreateProductResult,
   UpdateProductResult,
@@ -40,6 +44,25 @@ class ProductService {
 
   async getProductById(id: string): Promise<GetProductByIdResult> {
     const product = await Product.findOne({ id, isDeleted: false }).catch(
+      () => null,
+    );
+    if (!product) {
+      return {
+        success: false,
+        message: 'Product not found',
+        statusCode: 404,
+      };
+    }
+    return {
+      success: true,
+      message: 'Product retrieved successfully',
+      statusCode: 200,
+      data: { product },
+    };
+  }
+
+  async getProductBySlug(slug: string): Promise<GetProductBySlugResult> {
+    const product = await Product.findOne({ slug, isDeleted: false }).catch(
       () => null,
     );
     if (!product) {
@@ -92,9 +115,14 @@ class ProductService {
       };
     }
 
+    const existingSlugs = await Product.find({ isDeleted: false })
+      .distinct('slug')
+      .catch(() => []);
+
     const dataToCreate = {
       ...data,
       id: uuidv4(), // generate UUID for id
+      slug: generateUniqueSlug(data.title, existingSlugs), // generate unique slug
       categoryId: new mongoose.Types.ObjectId(data.categoryId), // Convert category string to ObjectId
     };
     const newProduct = await Product.create(dataToCreate).catch(() => null);
@@ -143,8 +171,18 @@ class ProductService {
       };
     }
 
+    const existingSlugs = await Product.find({ isDeleted: false })
+      .distinct('slug')
+      .catch(() => []);
+
     // Start with the incoming data (which may be partial)
-    const dataToUpdate = { ...data };
+    const dataToUpdate = {
+      ...data,
+      slug: generateUniqueSlug(
+        data.title || existingProduct.title,
+        existingSlugs,
+      ),
+    };
 
     // Only convert if categoryId is being updated in this request
     if (data.categoryId && typeof data.categoryId === 'string') {

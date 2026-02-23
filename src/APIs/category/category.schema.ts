@@ -46,11 +46,20 @@ export const categoryIdParamSchema = z.object({
   }),
 });
 
+export const categorySlugParamSchema = z.object({
+  params: z.object({
+    slug: z.string().trim().min(1, 'Slug is required'),
+  }),
+});
+
 /**
  * Types inferred from Zod
  */
 export type CreateCategoryInput = z.infer<
   typeof createCategorySchema
 >['body'] & { thumbnail: string };
-
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>['body'];
+export type CategoryIdParam = z.infer<typeof categoryIdParamSchema>['params'];
+export type CategorySlugParam = z.infer<
+  typeof categorySlugParamSchema
+>['params'];

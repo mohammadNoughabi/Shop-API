@@ -8,7 +8,7 @@ interface SendEmailResponse {
   timestamp: string;
 }
 
-import { getErrorMessage } from './getErrorMessage.ts';
+import { getErrorMessage } from '../utils/getErrorMessage.ts';
 
 const sendEmail = async (
   reciever: string,

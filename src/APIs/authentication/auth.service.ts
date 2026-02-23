@@ -10,8 +10,10 @@ import type {
   ResetPasswordResult,
 } from './auth.interface.ts';
 
-// import uitls
-import sendEmail from '../../utils/mail.ts';
+// import hrlper functions
+import sendEmail from '../../helpers/mail.ts';
+
+// import utils
 import generateRandomCode from '../../utils/generateRandomCode.ts';
 
 class AuthService {

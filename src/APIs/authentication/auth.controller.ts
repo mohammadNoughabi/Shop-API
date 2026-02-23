@@ -124,7 +124,7 @@ class AuthController {
     const user = findUserResult.data!.user;
 
     const resetPasswordResult = await authService.resetPassword(
-      user._id.toString(),
+      user.id,
       newPassword,
     );
 

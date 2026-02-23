@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import mongoose from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 import app from '../../src/app.ts';
 import { createTestCategory } from '../helpers/category.helper.ts';
 import { createTestProduct } from '../helpers/product.helper.ts';
@@ -26,15 +27,15 @@ describe('Category API', () => {
     it('should return a category by ID', async () => {
       const category = await createTestCategory();
 
-      const res = await request(app).get(`/api/category/${category._id}`);
+      const res = await request(app).get(`/api/category/${category.id}`);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.category._id).toBe(category._id.toString());
+      expect(res.body.data.category.id).toBe(category.id);
     });
 
     it('should return 404 for non-existent category', async () => {
-      const fakeId = new mongoose.Types.ObjectId().toString();
+      const fakeId = uuidv4();
       const res = await request(app).get(`/api/category/${fakeId}`);
 
       expect(res.status).toBe(404);
@@ -43,7 +44,7 @@ describe('Category API', () => {
     });
 
     it('should return 404 for valid ObjectId format but non-existent category', async () => {
-      const fakeId = new mongoose.Types.ObjectId().toString();
+      const fakeId = uuidv4();
       const res = await request(app).get(`/api/category/${fakeId}`);
 
       expect(res.status).toBe(404);
@@ -128,7 +129,7 @@ describe('Category API', () => {
       const category = await createTestCategory();
 
       const res = await request(app)
-        .put(`/api/category/${category._id}`)
+        .put(`/api/category/${category.id}`)
         .set('Cookie', adminToken)
         .attach('thumbnail', Buffer.from('new image'), 'new-thumbnail.jpg');
 
@@ -182,7 +183,7 @@ describe('Category API', () => {
     it('should update a category', async () => {
       const category = await createTestCategory();
       const res = await request(app)
-        .put(`/api/category/${category._id}`)
+        .put(`/api/category/${category.id}`)
         .set('Cookie', adminToken)
         .send({ title: 'Updated Title' });
 
@@ -191,7 +192,7 @@ describe('Category API', () => {
     });
 
     it('should return 404 for non-existent category', async () => {
-      const fakeId = new mongoose.Types.ObjectId().toString();
+      const fakeId = uuidv4();
       const res = await request(app)
         .put(`/api/category/${fakeId}`)
         .set('Cookie', adminToken)
@@ -214,7 +215,7 @@ describe('Category API', () => {
     it('should return 400 if no fields provided for update', async () => {
       const category = await createTestCategory();
       const res = await request(app)
-        .put(`/api/category/${category._id}`)
+        .put(`/api/category/${category.id}`)
         .set('Cookie', adminToken)
         .send({});
 
@@ -226,7 +227,7 @@ describe('Category API', () => {
       await createTestCategory({ title: 'Existing Title' });
       const category = await createTestCategory({ title: 'Another Title' });
       const res = await request(app)
-        .put(`/api/category/${category._id}`)
+        .put(`/api/category/${category.id}`)
         .set('Cookie', adminToken)
         .send({ title: 'Existing Title' });
 
@@ -254,7 +255,7 @@ describe('Category API', () => {
     it('should delete a category', async () => {
       const category = await createTestCategory();
       const res = await request(app)
-        .delete(`/api/category/${category._id}`)
+        .delete(`/api/category/${category.id}`)
         .set('Cookie', adminToken);
 
       expect(res.status).toBe(200);
@@ -262,7 +263,7 @@ describe('Category API', () => {
     });
 
     it('should return 404 for non-existent category', async () => {
-      const fakeId = new mongoose.Types.ObjectId().toString();
+      const fakeId = uuidv4();
       const res = await request(app)
         .delete(`/api/category/${fakeId}`)
         .set('Cookie', adminToken);
@@ -288,7 +289,7 @@ describe('Category API', () => {
       });
 
       const res = await request(app)
-        .delete(`/api/category/${category._id}`)
+        .delete(`/api/category/${category.id}`)
         .set('Cookie', adminToken);
 
       expect(res.status).toBe(400);
@@ -314,14 +315,14 @@ describe('Category API', () => {
       const category = await createTestCategory();
 
       const deleteRes = await request(app)
-        .delete(`/api/category/${category._id}`)
+        .delete(`/api/category/${category.id}`)
         .set('Cookie', adminToken);
 
       expect(deleteRes.status).toBe(200);
       expect(deleteRes.body.success).toBe(true);
 
       // Verify category is not returned in normal queries
-      const getRes = await request(app).get(`/api/category/${category._id}`);
+      const getRes = await request(app).get(`/api/category/${category.id}`);
 
       expect(getRes.status).toBe(404);
     });
@@ -331,21 +332,21 @@ describe('Category API', () => {
 
       // Delete first
       const deleteRes = await request(app)
-        .delete(`/api/category/${category._id}`)
+        .delete(`/api/category/${category.id}`)
         .set('Cookie', adminToken);
 
       expect(deleteRes.status).toBe(200);
 
       // Verify it's actually deleted by trying to get it
       const getAfterDelete = await request(app).get(
-        `/api/category/${category._id}`,
+        `/api/category/${category.id}`,
       );
 
       expect(getAfterDelete.status).toBe(404);
 
       // Restore
       const restoreRes = await request(app)
-        .post(`/api/category/${category._id}/restore`)
+        .post(`/api/category/${category.id}/restore`)
         .set('Cookie', adminToken);
 
       expect(restoreRes.status).toBe(200);
@@ -353,7 +354,7 @@ describe('Category API', () => {
 
       // Verify category is accessible again
       const getAfterRestore = await request(app).get(
-        `/api/category/${category._id}`,
+        `/api/category/${category.id}`,
       );
 
       expect(getAfterRestore.status).toBe(200);
@@ -363,7 +364,7 @@ describe('Category API', () => {
       const category = await createTestCategory();
 
       await request(app)
-        .delete(`/api/category/${category._id}`)
+        .delete(`/api/category/${category.id}`)
         .set('Cookie', adminToken);
 
       // Get all categories including deleted
@@ -376,7 +377,7 @@ describe('Category API', () => {
       expect(
         res.body.data.categories.some(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (c: any) => c._id === category._id.toString(),
+          (c: any) => c.id === category.id,
         ),
       ).toBe(true);
     });
@@ -408,7 +409,7 @@ describe('Category API', () => {
       const category = await createTestCategory();
 
       const res = await request(app)
-        .delete(`/api/category/${category._id}`)
+        .delete(`/api/category/${category.id}`)
         .set('Cookie', userToken);
 
       expect(res.status).toBe(403);
@@ -419,7 +420,7 @@ describe('Category API', () => {
       const category = await createTestCategory();
 
       const res = await request(app)
-        .put(`/api/category/${category._id}`)
+        .put(`/api/category/${category.id}`)
         .set('Cookie', userToken)
         .send({ title: 'Hacked Title' });
 

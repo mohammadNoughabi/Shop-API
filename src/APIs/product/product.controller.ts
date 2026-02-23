@@ -23,8 +23,17 @@ class ProductController {
   }
 
   async getById(req: Request, res: Response): Promise<Response> {
-    const id = req.params.id as string; // already validated by Zod → safe string & ObjectId format
+    const id = req.params.id as string; // already validated by Zod → safe string & uuid format
     const result = await productService.getProductById(id);
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
+    }
+    return res.status(result.statusCode || 200).json(result);
+  }
+
+  async getBySlug(req: Request, res: Response): Promise<Response> {
+    const slug = req.params.slug as string; // already validated by Zod → safe string
+    const result = await productService.getProductBySlug(slug);
     if (!result.success) {
       return res.status(result.statusCode || 500).json(result);
     }

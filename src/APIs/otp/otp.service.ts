@@ -10,7 +10,7 @@ import type {
 
 // import utils
 import generateRandomCode from '../../utils/generateRandomCode.ts';
-import sendEmail from '../../utils/mail.ts';
+import sendEmail from '../../helpers/mail.ts';
 
 const OTP_TTL_SECONDS = 3 * 60; // 180s = 3 minutes
 const OTP_KEY_PREFIX = 'otp:';

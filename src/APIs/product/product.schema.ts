@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z, uuidv4 } from 'zod';
 
 const title = z
   .string()
@@ -16,10 +16,9 @@ const price = z.coerce.number().positive('Price must be a positive number');
 
 const stock = z.coerce.number();
 
-const uuidSchema = z
+const objectId = z
   .string()
-  .uuid()
-  .regex(/^[0-9a-fA-F]{24}$/, 'Invalid UUID format');
+  .regex(/^[0-9a-fA-F]{24}$/, 'Must be a valid MongoDB ObjectId');
 
 /**
  * CREATE
@@ -31,7 +30,7 @@ export const createProductSchema = z.object({
     description,
     price,
     stock,
-    categoryId: uuidSchema,
+    categoryId: objectId,
   }),
 });
 
@@ -41,14 +40,14 @@ export const createProductSchema = z.object({
  */
 export const updateProductSchema = z.object({
   params: z.object({
-    id: uuidSchema,
+    id: uuidv4('Product ID must be a valid UUID'),
   }),
   body: z.object({
     title: title.optional(),
     description: description.optional(),
     price: price.optional(),
     stock: stock.optional(),
-    categoryId: uuidSchema.optional(),
+    categoryId: objectId.optional(),
   }),
 });
 
@@ -57,7 +56,13 @@ export const updateProductSchema = z.object({
  */
 export const productIdParamSchema = z.object({
   params: z.object({
-    id: uuidSchema,
+    id: uuidv4('Product ID must be a valid UUID'),
+  }),
+});
+
+export const productSlugParamSchema = z.object({
+  params: z.object({
+    slug: z.string().trim().min(1, 'Slug is required'),
   }),
 });
 
@@ -65,7 +70,7 @@ export const productIdParamSchema = z.object({
  * Types inferred from Zod
  */
 export type CreateProductInput = z.infer<typeof createProductSchema>['body'] & {
-  id: typeof uuidSchema;
+  id: string;
   image: string;
   gallery: string[];
 };

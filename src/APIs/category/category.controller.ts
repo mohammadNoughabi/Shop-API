@@ -23,8 +23,17 @@ class CategoryController {
   }
 
   async getById(req: Request, res: Response): Promise<Response> {
-    const id = req.params.id as string; // Zod already validated => safe string & ObjectId format
+    const id = req.params.id as string; // Zod already validated => safe string & uuid format
     const result = await categoryService.getCategoryById(id);
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
+    }
+    return res.status(result.statusCode || 200).json(result);
+  }
+
+  async getBySlug(req: Request, res: Response): Promise<Response> {
+    const slug = req.params.slug as string; // Zod already validated => safe string
+    const result = await categoryService.getCategoryBySlug(slug);
     if (!result.success) {
       return res.status(result.statusCode || 500).json(result);
     }
@@ -64,7 +73,7 @@ class CategoryController {
   }
 
   async update(req: Request, res: Response): Promise<Response> {
-    const id = req.params.id as string; // Zod validated => safe string & ObjectId format
+    const id = req.params.id as string; // Zod validated => safe string & uuid format
     const body = req.body as UpdateCategoryInput;
     const file = req.file;
 
@@ -98,7 +107,7 @@ class CategoryController {
   }
 
   async delete(req: Request, res: Response): Promise<Response> {
-    const id = req.params.id as string; // Zod validated => safe string & ObjectId format
+    const id = req.params.id as string; // Zod validated => safe string & uuid format
     const result = await categoryService.deleteCategory(id);
     if (!result.success) {
       return res.status(result.statusCode || 500).json(result);
@@ -107,7 +116,7 @@ class CategoryController {
   }
 
   async restore(req: Request, res: Response): Promise<Response> {
-    const id = req.params.id as string; // Zod validated => safe string & ObjectId format
+    const id = req.params.id as string; // Zod validated => safe string & uuid format
     const result = await categoryService.restoreCategory(id);
     if (!result.success) {
       return res.status(result.statusCode || 500).json(result);

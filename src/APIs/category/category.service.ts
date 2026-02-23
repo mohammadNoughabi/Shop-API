@@ -7,6 +7,9 @@ import Category from './category.model.ts';
 // import product service for cascade delete
 import productService from '../product/product.service.ts';
 
+// import helpers
+import generateUniqueSlug from '../../helpers/generateUniqueSlug.ts';
+
 // import types
 import type {
   CreateCategoryInput,
@@ -14,6 +17,7 @@ import type {
 } from './category.schema.ts';
 import type {
   GetCategoryByIdResult,
+  GetCategoryBySlugResult,
   GetAllCategoriesResult,
   CreateCategoryResult,
   UpdateCategoryResult,
@@ -63,6 +67,26 @@ class CategoryService {
     };
   }
 
+  async getCategoryBySlug(slug: string): Promise<GetCategoryBySlugResult> {
+    const category = await Category.findOne({
+      slug,
+      isDeleted: false,
+    }).catch(() => null); // ← catch and return null on any error
+    if (!category) {
+      return {
+        success: false,
+        message: 'Category not found',
+        statusCode: 404,
+      };
+    }
+    return {
+      success: true,
+      message: 'Category retrieved successfully',
+      statusCode: 200,
+      data: { category },
+    };
+  }
+
   async createCategory(
     data: CreateCategoryInput,
   ): Promise<CreateCategoryResult> {
@@ -77,9 +101,14 @@ class CategoryService {
         statusCode: 409,
       };
     }
-    const newCategory = await Category.create({ ...data, id: uuidv4() }).catch(
-      () => null,
-    );
+    const existingSlugs = await Category.find({ isDeleted: false })
+      .distinct('slug')
+      .catch(() => []);
+    const newCategory = await Category.create({
+      ...data,
+      id: uuidv4(),
+      slug: generateUniqueSlug(data.title, existingSlugs),
+    }).catch(() => null);
     if (!newCategory) {
       return {
         success: false,
@@ -122,9 +151,29 @@ class CategoryService {
         statusCode: 409,
       };
     }
-    const updatedCategory = await Category.findOneAndUpdate({ id }, data, {
-      new: true,
-    }).catch(() => null);
+
+    const existingSlugs = await Category.find({
+      isDeleted: false,
+      id: { $ne: id },
+    })
+      .distinct('slug')
+      .catch(() => []);
+    const newSlug = generateUniqueSlug(
+      data.title || category.title,
+      existingSlugs,
+    );
+    const dataToUpdate = {
+      ...data,
+      slug: newSlug,
+    };
+
+    const updatedCategory = await Category.findOneAndUpdate(
+      { id },
+      dataToUpdate,
+      {
+        new: true,
+      },
+    ).catch(() => null);
     if (!updatedCategory) {
       return {
         success: false,
@@ -153,9 +202,13 @@ class CategoryService {
       };
     }
 
-    const productsInCategory = await productService.getProductsByCategory(id);
+    const productsInCategory = await productService
+      .getProductsByCategory(existingCategory._id.toString())
+      .catch(() => null);
     const products =
-      productsInCategory.success && productsInCategory.data
+      productsInCategory &&
+      productsInCategory.success &&
+      productsInCategory.data
         ? productsInCategory.data.products
         : null;
     if (products && products.length > 0) {

@@ -11,6 +11,7 @@ import {
   createCategorySchema,
   updateCategorySchema,
   categoryIdParamSchema,
+  categorySlugParamSchema,
 } from './category.schema.ts';
 
 // controller
@@ -24,6 +25,12 @@ categoryRouter.get(
   '/:id',
   validate(categoryIdParamSchema),
   categoryController.getById,
+);
+
+categoryRouter.get(
+  '/slug/:slug',
+  validate(categorySlugParamSchema),
+  categoryController.getBySlug,
 );
 
 categoryRouter.post(

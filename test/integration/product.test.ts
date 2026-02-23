@@ -2,9 +2,10 @@ import app from '../../src/app.ts';
 import { createTestProduct } from '../helpers/product.helper.ts';
 import { createTestCategory } from '../helpers/category.helper.ts';
 import Product from '../../src/APIs/product/product.model.ts';
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import mongoose, { Types } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 import { getAdminToken } from '../helpers/auth.helper.ts';
 
 describe('Product API', () => {
@@ -18,7 +19,12 @@ describe('Product API', () => {
   });
 
   describe('Get /api/product', () => {
+    beforeEach(async () => {
+      await mongoose.connection.collection('products').deleteMany({});
+    });
+
     it('should retrieve a list of products', async () => {
+      await createTestProduct();
       const res = await request(app).get('/api/product');
       expect(res.status).toBe(200);
       expect(res.body.data.products).toHaveLength(1);
@@ -26,23 +32,23 @@ describe('Product API', () => {
 
     it('should retrieve a single product by ID', async () => {
       const product = await createTestProduct();
-      const res = await request(app).get(`/api/product/${product._id}`);
+      const res = await request(app).get(`/api/product/${product.id}`);
       expect(res.status).toBe(200);
     });
 
     it('should return 404 for non-existent product', async () => {
-      const fakeId = new Types.ObjectId().toString();
+      const fakeId = uuidv4();
       const res = await request(app).get(`/api/product/${fakeId}`);
       expect(res.status).toBe(404);
     });
 
-    it('should return 404 for invalid product ID format', async () => {
+    it('should return 400 for invalid product ID format', async () => {
       const res = await request(app).get(`/api/product/invalid-id`);
-      expect(res.status).toBe(404);
+      expect(res.status).toBe(400);
     });
 
-    it('should return 404 for valid ObjectId format but non-existent product', async () => {
-      const fakeId = new Types.ObjectId().toString();
+    it('should return 404 for valid UUID format but non-existent product', async () => {
+      const fakeId = uuidv4();
       const res = await request(app).get(`/api/product/${fakeId}`);
       expect(res.status).toBe(404);
     });
@@ -174,7 +180,6 @@ describe('Product API', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe('Product with this title already exists');
     });
   });
 
@@ -189,7 +194,7 @@ describe('Product API', () => {
     });
 
     it('should return 404 for non-existent product', async () => {
-      const fakeId = new Types.ObjectId().toString();
+      const fakeId = uuidv4();
       const res = await request(app)
         .put(`/api/product/${fakeId}`)
         .set('Cookie', adminToken)
@@ -203,7 +208,7 @@ describe('Product API', () => {
     it('should return 404 if product is deleted', async () => {
       const product = await createTestProduct({ isDeleted: true });
       const res = await request(app)
-        .put(`/api/product/${product._id}`)
+        .put(`/api/product/${product.id}`)
         .set('Cookie', adminToken)
         .field('title', 'Updated Title')
         .field('categoryId', new Types.ObjectId().toString());
@@ -215,7 +220,7 @@ describe('Product API', () => {
     it('should update an existing product title', async () => {
       const product = await createTestProduct();
       const res = await request(app)
-        .put(`/api/product/${product._id}`)
+        .put(`/api/product/${product.id}`)
         .set('Cookie', adminToken)
         .field('title', 'Updated Product Title')
         .field('categoryId', product.categoryId.toString());

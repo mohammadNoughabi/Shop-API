@@ -4,6 +4,7 @@ import type { Result } from '../../types/serviceResult/index.d.ts';
 export interface ICategory extends Document {
   id: string;
   title: string;
+  slug: string;
   thumbnail: string;
   description: string;
   isDeleted: boolean;
@@ -13,6 +14,7 @@ export interface ICategory extends Document {
 }
 
 export type GetCategoryByIdResult = Result<{ category: ICategory }>;
+export type GetCategoryBySlugResult = Result<{ category: ICategory }>;
 export type GetAllCategoriesResult = Result<{ categories: ICategory[] }>;
 export type CreateCategoryResult = Result<{ category: ICategory }>;
 export type UpdateCategoryResult = Result<{ category: ICategory }>;
