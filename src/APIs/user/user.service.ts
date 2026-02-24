@@ -1,3 +1,5 @@
+import sendEmail from '../../helpers/mail.ts';
+import generateRandomCode from '../../utils/generateRandomCode.ts';
 import User from './user.model.ts';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -9,6 +11,7 @@ import type {
   CreateUserResult,
   UpdatePasswordResult,
   DeleteAccountResult,
+  UpdateEmailResult,
 } from './user.interface.ts';
 import type { CreateUserInput, UpdatePasswordInput } from './user.schema.ts';
 
@@ -146,6 +149,71 @@ class UserService {
     return {
       success: true,
       message: 'Password updated successfully',
+      statusCode: 200,
+      data: { updatedUser },
+    };
+  }
+
+  private async verifyEmail(newEmail: string): Promise<boolean> {
+    const verificationCode = generateRandomCode(6);
+    const emailContent = `
+      <p>Your email verification code is: <strong>${verificationCode}</strong></p>
+      <p>Please enter this code in the app to verify your new email address.</p>
+    `;
+    const emailResult = await sendEmail({
+      reciever: newEmail,
+      subject: 'Email Verification',
+      htmlContent: emailContent,
+    });
+    return emailResult.success;
+  }
+
+  async updateUserEmail(
+    id: string,
+    newEmail: string,
+  ): Promise<UpdateEmailResult> {
+    const existingUser = await User.findOne({
+      id,
+      isDeleted: false,
+    }).catch(() => null);
+    if (!existingUser) {
+      return {
+        success: false,
+        message: 'User not found',
+        statusCode: 404,
+      };
+    }
+    const emailExists = await User.findOne({
+      email: newEmail,
+      isDeleted: false,
+    }).catch(() => null);
+    if (emailExists) {
+      return {
+        success: false,
+        message: 'Email already in use',
+        statusCode: 400,
+      };
+    }
+    const emailSent = await this.verifyEmail(newEmail);
+    if (!emailSent) {
+      return {
+        success: false,
+        message: 'Failed to send verification email',
+        statusCode: 500,
+      };
+    }
+    existingUser.email = newEmail;
+    const updatedUser = await existingUser.save().catch(() => null);
+    if (!updatedUser) {
+      return {
+        success: false,
+        message: 'Failed to update email',
+        statusCode: 500,
+      };
+    }
+    return {
+      success: true,
+      message: 'Email updated successfully',
       statusCode: 200,
       data: { updatedUser },
     };

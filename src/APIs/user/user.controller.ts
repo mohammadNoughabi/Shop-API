@@ -32,6 +32,16 @@ class UserController {
     return res.status(result.statusCode || 200).json(result);
   }
 
+  async updateEmail(req: Request, res: Response): Promise<Response> {
+    const id = req.user.id as string;
+    const { newEmail } = req.body as { newEmail: string };
+    const result = await userService.updateUserEmail(id, newEmail);
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
+    }
+    return res.status(result.statusCode || 200).json(result);
+  }
+
   async deleteAccount(req: Request, res: Response): Promise<Response> {
     const id = req.user.id as string;
     const result = await userService.deleteUserAccount(id);

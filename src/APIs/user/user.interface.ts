@@ -21,5 +21,6 @@ export type FindByEmailResult = Result<{ user: IUser }>;
 export type FindByUsernameResult = Result<{ user: IUser }>;
 export type GetProfileResult = Result<{ user: IUser }>;
 export type CreateUserResult = Result<{ user: IUser }>;
+export type UpdateEmailResult = Result<{ updatedUser: IUser }>;
 export type UpdatePasswordResult = Result<{ updatedUser: IUser }>;
 export type DeleteAccountResult = Result<{ deletedUser: IUser }>;

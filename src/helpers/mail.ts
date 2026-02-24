@@ -1,5 +1,11 @@
 import nodemailer from 'nodemailer';
 
+interface SendEmailInput {
+  reciever: string;
+  subject: string;
+  htmlContent: string;
+}
+
 interface SendEmailResponse {
   success: boolean;
   messageId?: string;
@@ -10,11 +16,8 @@ interface SendEmailResponse {
 
 import { getErrorMessage } from '../utils/getErrorMessage.ts';
 
-const sendEmail = async (
-  reciever: string,
-  subject: string,
-  htmlContent: string,
-): Promise<SendEmailResponse> => {
+const sendEmail = async (input: SendEmailInput): Promise<SendEmailResponse> => {
+  const { reciever, subject, htmlContent } = input;
   try {
     // Validate input
     if (!reciever || !subject || !htmlContent) {
