@@ -12,6 +12,13 @@ const description = z
   .min(1, 'Description is required')
   .max(500, 'Description is too long');
 
+const multerFileSchema = z.object({
+  fieldname: z.string(),
+  originalname: z.string(),
+  mimetype: z.string(),
+  size: z.number().max(5 * 1024 * 1024, 'File too large (max 5MB)'),
+});
+
 /**
  * CREATE
  * thumbnail comes from multer, not body
@@ -21,6 +28,7 @@ export const createCategorySchema = z.object({
     title,
     description,
   }),
+  file: multerFileSchema,
 });
 
 /**
@@ -35,6 +43,7 @@ export const updateCategorySchema = z.object({
     title: title.optional(),
     description: description.optional(),
   }),
+  file: multerFileSchema.optional(),
 });
 
 /**
@@ -55,10 +64,8 @@ export const categorySlugParamSchema = z.object({
 /**
  * Types inferred from Zod
  */
-export type CreateCategoryInput = z.infer<
-  typeof createCategorySchema
->['body'] & { thumbnail: string };
-export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>['body'];
+export type CreateCategoryBody = z.infer<typeof createCategorySchema>['body'];
+export type UpdateCategoryBody = z.infer<typeof updateCategorySchema>['body'];
 export type CategoryIdParam = z.infer<typeof categoryIdParamSchema>['params'];
 export type CategorySlugParam = z.infer<
   typeof categorySlugParamSchema

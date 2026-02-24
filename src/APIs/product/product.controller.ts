@@ -6,11 +6,10 @@ import { removeFiles } from '../../utils/removeFile.ts';
 
 // types
 import type { Request, Response } from 'express';
-import type { ProductFiles } from './product.interface.ts';
 import type {
-  CreateProductInput,
-  UpdateProductInput,
-} from './product.schema.ts';
+  CreateProductData,
+  UpdateProductData,
+} from './product.interface.ts';
 
 class ProductController {
   async getAll(_req: Request, res: Response): Promise<Response> {
@@ -41,47 +40,32 @@ class ProductController {
   }
 
   async create(req: Request, res: Response): Promise<Response> {
-    const body = req.body as CreateProductInput;
-    const files = req.files as ProductFiles;
+    const data: CreateProductData = req.body; // Zod validated, so we can safely assert type
 
-    // 1. Extract all uploaded files into a single flat array for validation/cleanup
-    const allFiles = [...(files.image || []), ...(files.gallery || [])];
-
-    // 2. Validate File Types (MIME types)
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-    const invalidFiles = allFiles.filter(
-      (file) => !allowedTypes.includes(file.mimetype),
-    );
-
-    if (invalidFiles.length > 0) {
-      // Cleanup ALL uploaded files if even one is invalid
-      await removeFiles(allFiles.map((f) => f.filename));
-
+    // Narrow req.files type safely
+    if (!req.files || Array.isArray(req.files)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid file format. Only JPEG and PNG are allowed.',
+        message: 'Files are required',
       });
     }
 
-    // Files are required — Zod can't validate multer files → we still check here
-    if (!files.image?.[0]) {
-      return res.status(400).json({
-        success: false,
-        message: 'Main image is required',
-      });
-    }
+    const imageFile = req.files.image[0];
+    const galleryFiles = req.files.gallery;
 
-    const image = files.image[0].filename;
-    const gallery = files.gallery?.map((f) => f.filename) ?? [];
+    const imageFilename = imageFile.filename;
+    const galleryFilenames = galleryFiles.map((f) => f.filename);
 
-    const result = await productService.createProduct({
-      ...body,
-      image,
-      gallery,
-    });
+    const serviceInput: CreateProductData = {
+      ...data,
+      image: imageFilename,
+      gallery: galleryFilenames,
+    };
+
+    const result = await productService.createProduct(serviceInput);
 
     if (!result.success) {
-      await removeFiles([image, ...gallery].filter(Boolean));
+      await removeFiles([imageFilename, ...galleryFilenames].filter(Boolean));
       return res.status(result.statusCode || 500).json(result);
     }
 
@@ -90,40 +74,37 @@ class ProductController {
 
   async update(req: Request, res: Response): Promise<Response> {
     const id = req.params.id as string; // Zod validated
-    const body = req.body as UpdateProductInput;
-    const files = req.files as ProductFiles;
+    const data: UpdateProductData = req.body; // Zod validated, so we can safely assert type
 
-    let image: string | undefined;
-    let gallery: string[] | undefined;
+    let image: Express.Multer.File[] | undefined;
+    let gallery: Express.Multer.File[] | undefined;
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (files) {
-      if (files.image?.[0]) {
-        image = files.image[0].filename;
-      }
-      if (files.gallery?.length) {
-        gallery = files.gallery.map((f) => f.filename);
-      }
+    if (req.files && !Array.isArray(req.files)) {
+      const files = req.files as {
+        image?: Express.Multer.File[];
+        gallery?: Express.Multer.File[];
+      };
+      image = files.image;
+      gallery = files.gallery;
     }
 
-    const updateData: UpdateProductInput = {
-      ...body,
+    const updateData: UpdateProductData = {
+      ...data,
     };
-
-    if (image !== undefined) {
-      updateData.image = image;
+    if (image?.length) {
+      updateData.image = image[0].filename;
     }
-    if (gallery !== undefined) {
-      updateData.gallery = gallery;
+    if (gallery?.length) {
+      updateData.gallery = gallery.map((f) => f.filename);
     }
 
     const result = await productService.updateProduct(id, updateData);
 
     // Cleanup only new files if business logic rejected update
-    if (!result.success && (image || gallery)) {
+    if (!result.success && (data.image || data.gallery)) {
       const toRemove: string[] = [];
-      if (image) toRemove.push(image);
-      if (gallery) toRemove.push(...gallery);
+      if (image) toRemove.push(image[0].filename);
+      if (gallery) toRemove.push(...gallery.map((f) => f.filename));
       if (toRemove.length > 0) await removeFiles(toRemove);
     }
 
@@ -133,6 +114,15 @@ class ProductController {
   async delete(req: Request, res: Response): Promise<Response> {
     const id = req.params.id as string; // Zod validated
     const result = await productService.deleteProduct(id);
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json(result);
+    }
+    return res.status(result.statusCode || 200).json(result);
+  }
+
+  async restore(req: Request, res: Response): Promise<Response> {
+    const id = req.params.id as string; // Zod validated
+    const result = await productService.restoreProduct(id);
     if (!result.success) {
       return res.status(result.statusCode || 500).json(result);
     }

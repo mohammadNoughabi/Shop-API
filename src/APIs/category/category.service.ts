@@ -12,9 +12,9 @@ import generateUniqueSlug from '../../helpers/generateUniqueSlug.ts';
 
 // import types
 import type {
-  CreateCategoryInput,
-  UpdateCategoryInput,
-} from './category.schema.ts';
+  CreateCategoryData,
+  UpdateCategoryData,
+} from './category.interface.ts';
 import type {
   GetCategoryByIdResult,
   GetCategoryBySlugResult,
@@ -88,7 +88,7 @@ class CategoryService {
   }
 
   async createCategory(
-    data: CreateCategoryInput,
+    data: CreateCategoryData,
   ): Promise<CreateCategoryResult> {
     const existingCategory = await Category.findOne({
       title: data.title,
@@ -126,7 +126,7 @@ class CategoryService {
 
   async updateCategory(
     id: string,
-    data: UpdateCategoryInput,
+    data: UpdateCategoryData,
   ): Promise<UpdateCategoryResult> {
     const category = await Category.findOne({
       id,

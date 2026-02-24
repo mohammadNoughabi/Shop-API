@@ -8,18 +8,16 @@ import Product from './product.model.ts';
 // helpers
 import generateUniqueSlug from '../../helpers/generateUniqueSlug.ts';
 
-// types
 import type {
-  CreateProductInput,
-  UpdateProductInput,
-} from './product.schema.ts';
-import type {
+  CreateProductData,
+  UpdateProductData,
   GetProductByIdResult,
   GetProductBySlugResult,
   GetAllProductsResult,
   CreateProductResult,
   UpdateProductResult,
   DeleteProductResult,
+  RestoreProductResult,
   BulkUpdateStockResult,
 } from './product.interface.ts';
 class ProductService {
@@ -102,7 +100,7 @@ class ProductService {
     };
   }
 
-  async createProduct(data: CreateProductInput): Promise<CreateProductResult> {
+  async createProduct(data: CreateProductData): Promise<CreateProductResult> {
     const existingProduct = await Product.findOne({
       title: data.title,
       isDeleted: false,
@@ -143,7 +141,7 @@ class ProductService {
 
   async updateProduct(
     id: string,
-    data: UpdateProductInput,
+    data: UpdateProductData,
   ): Promise<UpdateProductResult> {
     const existingProduct = await Product.findOne({
       id,
@@ -241,6 +239,38 @@ class ProductService {
       message: 'Product deleted successfully',
       statusCode: 200,
       data: { product: deletedProduct },
+    };
+  }
+
+  async restoreProduct(id: string): Promise<RestoreProductResult> {
+    const existingProduct = await Product.findOne({
+      id,
+      isDeleted: true,
+    }).catch(() => null);
+    if (!existingProduct) {
+      return {
+        success: false,
+        message: 'Product not found or not deleted',
+        statusCode: 404,
+      };
+    }
+    const restoredProduct = await Product.findOneAndUpdate(
+      { id, isDeleted: true },
+      { isDeleted: false, deletedAt: null },
+      { new: true },
+    ).catch(() => null);
+    if (!restoredProduct) {
+      return {
+        success: false,
+        message: 'Product not found or not deleted',
+        statusCode: 404,
+      };
+    }
+    return {
+      success: true,
+      message: 'Product restored successfully',
+      statusCode: 200,
+      data: { product: restoredProduct },
     };
   }
 

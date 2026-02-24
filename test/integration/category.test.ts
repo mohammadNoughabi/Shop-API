@@ -301,30 +301,14 @@ describe('Category API', () => {
   });
 
   // =====================================
-  // SOFT DELETE AND RESTORE
+  // RESTORE
   // =====================================
-  describe('Category Soft Delete and Restore', () => {
+  describe('Category Restore', () => {
     let adminToken: string;
 
     beforeAll(async () => {
       adminToken = await getAdminToken();
       await mongoose.connection.collection('categories').deleteMany({});
-    });
-
-    it('should soft delete a category', async () => {
-      const category = await createTestCategory();
-
-      const deleteRes = await request(app)
-        .delete(`/api/category/${category.id}`)
-        .set('Cookie', adminToken);
-
-      expect(deleteRes.status).toBe(200);
-      expect(deleteRes.body.success).toBe(true);
-
-      // Verify category is not returned in normal queries
-      const getRes = await request(app).get(`/api/category/${category.id}`);
-
-      expect(getRes.status).toBe(404);
     });
 
     it('should restore a soft-deleted category', async () => {

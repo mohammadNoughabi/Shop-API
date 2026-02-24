@@ -20,6 +20,13 @@ const objectId = z
   .string()
   .regex(/^[0-9a-fA-F]{24}$/, 'Must be a valid MongoDB ObjectId');
 
+const multerFileSchema = z.object({
+  fieldname: z.string(),
+  originalname: z.string(),
+  mimetype: z.string(),
+  size: z.number().max(5 * 1024 * 1024, 'File too large (max 5MB)'),
+});
+
 /**
  * CREATE
  * image and gallery come from multer, not body
@@ -32,6 +39,16 @@ export const createProductSchema = z.object({
     stock,
     categoryId: objectId,
   }),
+  files: z
+    .object({
+      image: z.array(multerFileSchema).min(1, 'Main image is required'),
+      gallery: z.array(multerFileSchema).optional().default([]),
+    })
+    .refine((files) => {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      const allFiles = [...files.image, ...files.gallery];
+      return allFiles.every((file) => allowedTypes.includes(file.mimetype));
+    }, 'Invalid file format. Only JPEG , JPG and PNG are allowed.'),
 });
 
 /**
@@ -49,6 +66,18 @@ export const updateProductSchema = z.object({
     stock: stock.optional(),
     categoryId: objectId.optional(),
   }),
+  files: z
+    .object({
+      image: z.array(multerFileSchema).min(1).optional().default([]),
+      gallery: z.array(multerFileSchema).optional().default([]),
+    })
+    .optional()
+    .refine((files) => {
+      if (!files) return true; // no files is fine for update
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      const allFiles = [...files.image, ...files.gallery];
+      return allFiles.every((file) => allowedTypes.includes(file.mimetype));
+    }, 'Invalid file format. Only JPEG , JPG and PNG are allowed.'),
 });
 
 /**
@@ -69,13 +98,6 @@ export const productSlugParamSchema = z.object({
 /**
  * Types inferred from Zod
  */
-export type CreateProductInput = z.infer<typeof createProductSchema>['body'] & {
-  id: string;
-  image: string;
-  gallery: string[];
-};
+export type CreateProductBody = z.infer<typeof createProductSchema>['body'];
 
-export type UpdateProductInput = z.infer<typeof updateProductSchema>['body'] & {
-  image?: string;
-  gallery?: string[];
-};
+export type UpdateProductBody = z.infer<typeof updateProductSchema>['body'];

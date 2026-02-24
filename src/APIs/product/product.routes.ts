@@ -54,4 +54,12 @@ productRouter.delete(
   productController.delete,
 );
 
+productRouter.post(
+  '/:id/restore',
+  authenticateToken,
+  authorizeRole(['admin']),
+  validate(productIdParamSchema),
+  productController.restore,
+);
+
 export default productRouter;

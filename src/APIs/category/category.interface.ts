@@ -1,5 +1,9 @@
 import type { Document } from 'mongoose';
 import type { Result } from '../../types/serviceResult/index.d.ts';
+import type {
+  CreateCategoryBody,
+  UpdateCategoryBody,
+} from './category.schema.ts';
 
 export interface ICategory extends Document {
   id: string;
@@ -12,6 +16,9 @@ export interface ICategory extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type CreateCategoryData = CreateCategoryBody & { thumbnail: string };
+export type UpdateCategoryData = UpdateCategoryBody & { thumbnail?: string };
 
 export type GetCategoryByIdResult = Result<{ category: ICategory }>;
 export type GetCategoryBySlugResult = Result<{ category: ICategory }>;

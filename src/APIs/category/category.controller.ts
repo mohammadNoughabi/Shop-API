@@ -7,9 +7,9 @@ import { removeFile } from '../../utils/removeFile.ts';
 // types
 import type { Request, Response } from 'express';
 import type {
-  CreateCategoryInput,
-  UpdateCategoryInput,
-} from './category.schema.ts';
+  CreateCategoryData,
+  UpdateCategoryData,
+} from './category.interface.ts';
 
 class CategoryController {
   async getAll(req: Request, res: Response): Promise<Response> {
@@ -41,7 +41,7 @@ class CategoryController {
   }
 
   async create(req: Request, res: Response): Promise<Response> {
-    const body = req.body as CreateCategoryInput;
+    const body = req.body as CreateCategoryData;
     const file = req.file;
 
     if (!file) {
@@ -51,11 +51,16 @@ class CategoryController {
       });
     }
 
-    if (file.mimetype !== 'image/jpeg' && file.mimetype !== 'image/png') {
+    if (
+      file.mimetype !== 'image/jpeg' &&
+      file.mimetype !== 'image/png' &&
+      file.mimetype !== 'image/jpg'
+    ) {
       await removeFile(file.filename);
       return res.status(400).json({
         success: false,
-        message: 'Invalid thumbnail format. Only JPEG and PNG are allowed.',
+        message:
+          'Invalid thumbnail format. Only JPEG, JPG, and PNG are allowed.',
       });
     }
 
@@ -74,10 +79,10 @@ class CategoryController {
 
   async update(req: Request, res: Response): Promise<Response> {
     const id = req.params.id as string; // Zod validated => safe string & uuid format
-    const body = req.body as UpdateCategoryInput;
+    const body = req.body as UpdateCategoryData;
     const file = req.file;
 
-    const updateData: UpdateCategoryInput & { thumbnail?: string } = {
+    const updateData: UpdateCategoryData = {
       ...body,
     };
 
