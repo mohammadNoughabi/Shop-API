@@ -7,3 +7,4 @@ uploads
 dist
 coverage/
 directory_tree.txt
+logs/

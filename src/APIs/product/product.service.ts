@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import Product from './product.model.ts';
 
 // helpers
-import generateUniqueSlug from '../../helpers/generateUniqueSlug.ts';
+import generateUniqueSlug from '../../utils/generateUniqueSlug.ts';
 
 import type {
   CreateProductData,

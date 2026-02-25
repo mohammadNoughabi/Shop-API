@@ -8,7 +8,7 @@ import Category from './category.model.ts';
 import productService from '../product/product.service.ts';
 
 // import helpers
-import generateUniqueSlug from '../../helpers/generateUniqueSlug.ts';
+import generateUniqueSlug from '../../utils/generateUniqueSlug.ts';
 
 // import types
 import type {

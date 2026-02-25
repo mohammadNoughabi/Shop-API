@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
+import logger from '../helpers/logger.ts';
 
 const authorizeRole = (allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -17,7 +18,7 @@ const authorizeRole = (allowedRoles: string[]) => {
 
       next();
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return res.status(500).json({
         success: false,
         message: 'Internal server error',

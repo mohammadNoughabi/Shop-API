@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import type { ConnectOptions } from 'mongoose';
 
+import logger from '../helpers/logger.ts';
+
 /* ============================
    Environment typing
 ============================ */
@@ -35,15 +37,15 @@ class MongoConnection {
 
   async connect(): Promise<void> {
     if (this.isConnected()) {
-      console.log('✅ MongoDB already connected');
+      logger.info('✅ MongoDB already connected');
       return;
     }
 
     try {
       await mongoose.connect(this.uri, this.options);
-      console.log('✔ MongoDB connected successfully');
+      logger.info('✔ MongoDB connected successfully');
     } catch (error) {
-      console.error('❌ MongoDB connection failed', error);
+      logger.error('❌ MongoDB connection failed', error);
       process.exit(1);
     }
   }
@@ -52,7 +54,7 @@ class MongoConnection {
     if (!this.isConnected()) return;
 
     await mongoose.disconnect();
-    console.log('❎ MongoDB disconnected');
+    logger.info('❎ MongoDB disconnected');
   }
 
   isConnected(): boolean {
@@ -135,7 +137,7 @@ class MongoConnection {
 
   private registerProcessHandlers(): void {
     const gracefulShutdown = async (signal: string) => {
-      console.log(`⛔ Received ${signal}. Closing MongoDB connection...`);
+      logger.info(`⛔ Received ${signal}. Closing MongoDB connection...`);
       await this.disconnect();
       process.exit(0);
     };

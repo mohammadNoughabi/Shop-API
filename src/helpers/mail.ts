@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import logger from './logger.ts';
 
 interface SendEmailInput {
   reciever: string;
@@ -66,7 +67,7 @@ const sendEmail = async (input: SendEmailInput): Promise<SendEmailResponse> => {
     // Send email
     const info = await transporter.sendMail(mailOptions);
 
-    console.log('Email sent successfully to', reciever);
+    logger.info('Email sent successfully to', reciever);
     return {
       success: true,
       messageId: info.messageId,
@@ -74,7 +75,7 @@ const sendEmail = async (input: SendEmailInput): Promise<SendEmailResponse> => {
       timestamp: new Date().toISOString(),
     };
   } catch (error: unknown) {
-    console.error('Email send error:', error);
+    logger.error('Email send error:', error);
 
     return {
       success: false,

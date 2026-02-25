@@ -1,6 +1,7 @@
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
+import logger from '../helpers/logger.ts';
 
 import type { Request } from 'express';
 
@@ -9,7 +10,7 @@ const uploadDir = path.join(process.cwd(), 'uploads');
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
-  console.log('Created uploads directory:', uploadDir);
+  logger.info('Created uploads directory:', uploadDir);
 }
 
 // configure multer for file uploads

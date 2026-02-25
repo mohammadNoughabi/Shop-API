@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { MulterError } from 'multer';
+import logger from '../helpers/logger.ts';
 
 const errorHandler = (
   err: Express.Error,
@@ -20,7 +21,7 @@ const errorHandler = (
     });
   }
 
-  console.error('EXPRESS GLOBAL ERROR:', {
+  logger.error('EXPRESS GLOBAL ERROR:', {
     message: err.message,
     stack: err.stack,
     path: req.path,

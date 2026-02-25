@@ -100,14 +100,14 @@ class AuthService {
     }
 
     const code = generateRandomCode(6);
-    const result = await sendEmail(
-      email,
-      'Welcome to our Shop',
-      ` <div>
+    const result = await sendEmail({
+      reciever: email,
+      subject: 'Welcome to our Shop',
+      htmlContent: ` <div>
             <h2>Verification Email</h2>
             <p>your verification code is ${code}</p>
         </div>`,
-    );
+    });
     return {
       success: true,
       message: 'Verification code sent to email',

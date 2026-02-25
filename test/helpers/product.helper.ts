@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import Product from '../../src/APIs/product/product.model.ts';
 import { createTestCategory } from './category.helper.ts';
-import generateUniqueSlug from '../../src/helpers/generateUniqueSlug.ts';
+import generateUniqueSlug from '../../src/utils/generateUniqueSlug.ts';
 
 export async function createTestProduct(overrides = {}) {
   const category = await createTestCategory();

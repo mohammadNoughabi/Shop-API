@@ -1,5 +1,6 @@
 import jwtService from '../APIs/authentication/jwt.service.ts';
 import type { Request, Response, NextFunction } from 'express';
+import logger from '../helpers/logger.ts';
 
 const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -23,7 +24,7 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
 
     next();
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.status(401).json({
       success: false,
       message: 'Invalid or expired access token',

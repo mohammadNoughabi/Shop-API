@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import Category from '../../src/APIs/category/category.model.ts';
-import generateUniqueSlug from '../../src/helpers/generateUniqueSlug.ts';
+import generateUniqueSlug from '../../src/utils/generateUniqueSlug.ts';
 
 export async function createTestCategory(overrides = {}) {
   const defaultData = {
